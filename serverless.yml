@@ -1,0 +1,18 @@
+service: appsyncmasterclass-backend
+frameworkVersion: "3"
+
+plugins:
+  - serverless-appsync-plugin
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+
+package:
+  exclude:
+    - package-loc.json
+    - package.json
+    - _aws.graphql
+
+custom:
+  appSync: ${file(serverless.appsync-api.yml)}
