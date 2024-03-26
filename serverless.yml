@@ -4,6 +4,7 @@ frameworkVersion: '3'
 plugins:
   - serverless-appsync-plugin
   - serverless-iam-roles-per-function
+  - serverless-export-env
 
 provider:
   name: aws
@@ -18,8 +19,10 @@ package:
   exclude:
     - package-lock.json
     - package.json
+    - _aws.graphql
 
 custom:
+  region: ${opt:region, self:provider.region}
   stage: ${opt:stage, self:provider.stage}
 
 appSync:
@@ -45,7 +48,7 @@ functions:
 resources:
   Resources:
     UsersTable:
-      Type: AWS::DynamoDB::GlobalTable
+      Type: AWS::DynamoDB::Table
       Properties:
         BillingMode: PAY_PER_REQUEST
         KeySchema:
@@ -102,5 +105,7 @@ resources:
         PreventUserExistenceErrors: ENABLED
 
   Outputs:
+    AwsRegion:
+      Value: ${self:custom.region}
     CognitoUserPoolId:
       Value: !Ref CognitoUserPool
