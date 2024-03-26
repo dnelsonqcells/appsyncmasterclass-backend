@@ -4,8 +4,8 @@ const AWS = require('aws-sdk')
 const a_user_signs_up = async (password, name, email) => {
     const cognito = new AWS.CognitoIdentityServiceProvider()
 
-    const userPoolId = process.env.COGNITO_USER_POOL_ID
-    const clientId = process.env.WEB_COGNITO_USER_POOL_CLIENT_ID
+    const userPoolId = process.env.CognitoUserPoolId
+    const clientId = process.env.WebCognitoUserPoolClientId
 
     const signUpResp = await cognito.signUp({
         ClientId: clientId,
@@ -39,8 +39,8 @@ const we_invoke_confirmUserSignup = async (username, name, email) => {
     const context = {}
     const event = {
         "version": "1",
-        "region": process.env.AWS_REGION,
-        "userPoolId": process.env.COGNITO_USER_POOL_ID,
+        "region": process.env.AwsRegion,
+        "userPoolId": process.env.CognitoUserPoolId,
         "userName": username,
         "triggerSource": "PostConfirmation_ConfirmSignUp",
         "request": {

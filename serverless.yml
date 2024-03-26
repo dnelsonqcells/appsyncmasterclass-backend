@@ -5,6 +5,7 @@ plugins:
   - serverless-appsync-plugin
   - serverless-iam-roles-per-function
   - serverless-export-env
+  - serverless-export-outputs
 
 provider:
   name: aws
@@ -24,6 +25,13 @@ package:
 custom:
   region: ${opt:region, self:provider.region}
   stage: ${opt:stage, self:provider.stage}
+  exportOutputs:
+    include:
+      - AwsRegion
+      - CognitoUserPoolId
+      - WebCognitoUserPoolClientId
+    output:
+      file: ./.env-outputs
 
 appSync:
   name: appsyncmasterclass
@@ -109,3 +117,5 @@ resources:
       Value: ${self:custom.region}
     CognitoUserPoolId:
       Value: !Ref CognitoUserPool
+    WebCognitoUserPoolClientId:
+      Value: !Ref WebUserPoolClient
