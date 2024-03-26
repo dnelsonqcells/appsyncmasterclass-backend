@@ -14,12 +14,12 @@ package:
     - package-lock.json
     - package.json
 
-custom:
-  appSync:
-    name: appsyncmasterclass
-    schema: schema.api.graphql
-    authenticationType: AMAZON_COGNITO_USER_POOLS
-    userPoolConfig:
+appSync:
+  name: appsyncmasterclass
+  schema: schema.api.graphql
+  authentication:
+    type: 'AMAZON_COGNITO_USER_POOLS'
+    config:
       awsRegion: us-east-1
       defaultAction: ALLOW
       userPoolId: !Ref CognitoUserPool
