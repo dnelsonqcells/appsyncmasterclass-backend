@@ -49,6 +49,10 @@ appSync:
       functions:
       - dataSource: usersTable
         code: resolvers/getMyProfile.js
+    Mutation.editMyProfile:
+      functions:
+        - dataSource: usersTable
+          code: resolvers/editMyProfile.js
   dataSources:
     none:
       type: NONE
