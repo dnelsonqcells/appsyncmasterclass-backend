@@ -49,6 +49,10 @@ appSync:
       functions:
       - dataSource: usersTable
         code: resolvers/getMyProfile.js
+    Query.getImageUploadUrl:
+      - dataSource: getImageUploadUrl
+        request: false
+        response: false
     Mutation.editMyProfile:
       functions:
         - dataSource: usersTable
@@ -60,6 +64,10 @@ appSync:
       type: AMAZON_DYNAMODB
       config:
         tableName: !Ref UsersTable
+    getImageUploadUrlFunction:
+      type: AWS_LAMBDA
+      config:
+        functionName: getImageUploadUrl
 
 functions:
   confirmUserSignup:
@@ -70,6 +78,17 @@ functions:
       - Effect: Allow
         Action: dynamodb:PutItem
         Resource: !GetAtt UsersTable.Arn
+
+  getImageUploadUrl:
+    handler: functions/get-upload-url.handler
+    environment:
+      BUCKET_NAME: !Ref AssetsBucket
+      iamRoleStatements:
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:PutObjectAcl
+          Resource: !Sub ${AssetsBucket.Arn}/*
 
 resources:
   Resources:
@@ -129,6 +148,15 @@ resources:
           - ALLOW_USER_PASSWORD_AUTH
           - ALLOW_REFRESH_TOKEN_AUTH
         PreventUserExistenceErrors: ENABLED
+
+    AssetsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        AccelerateConfiguration:
+          AccelerationStatus: Enabled
+        CorsConfiguration:
+          CorsRules:
+            -
 
   Outputs:
     AwsRegion:
