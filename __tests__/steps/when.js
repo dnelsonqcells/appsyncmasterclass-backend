@@ -1,6 +1,6 @@
 require('dotenv').config({ path: ['.env.local', '.env'] })
 const AWS = require('aws-sdk')
-
+const { GraphQL, registerFragment } = require('../../lib/graphql')
 const a_user_signs_up = async (password, name, email) => {
     const cognito = new AWS.CognitoIdentityServiceProvider()
 
@@ -59,7 +59,39 @@ const we_invoke_confirmUserSignup = async (username, name, email) => {
     await handler(event, context)
 }
 
+const a_user_calls_getMyProfile = async (user) => {
+  //   const getMyProfile = `query getMyProfile {
+  //   getMyProfile {
+  //     ... myProfileFields
+  //
+  //     tweets {
+  //       nextToken
+  //       tweets {
+  //         ... iTweetFields
+  //       }
+  //     }
+  //   }
+  // }`
+    const getMyProfile = `query getMyProfile {
+    getMyProfile {
+         backgroundImageUrl
+        bio
+        followersCount
+        createdAt
+        birthdate
+    }
+  }`
+
+    const data = await GraphQL(process.env.API_URL, getMyProfile, {}, user.accessToken)
+    const profile = data.getMyProfile
+
+    console.log(`[${user.username}] - fetched profile`)
+
+    return profile
+}
+
 module.exports = {
     a_user_signs_up,
-    we_invoke_confirmUserSignup
+    we_invoke_confirmUserSignup,
+    a_user_calls_getMyProfile
 }
