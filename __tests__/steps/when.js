@@ -17,14 +17,14 @@ const a_user_signs_up = async (password, name, email) => {
     }).promise()
 
     const username = signUpResp.UserSub
-    console.log(`[${email}] - user has signed up [${username}]`)
+    console.warn(`[${email}] - user has signed up [${username}]`)
 
     await cognito.adminConfirmSignUp({
         UserPoolId: userPoolId,
         Username: username
     }).promise()
 
-    console.log(`[${email}] - confirmed sign up`)
+    console.warn(`[${email}] - confirmed sign up`)
 
     return {
         username,
@@ -85,7 +85,7 @@ const a_user_calls_getMyProfile = async (user) => {
     const data = await GraphQL(process.env.API_URL, getMyProfile, {}, user.accessToken)
     const profile = data.getMyProfile
 
-    console.log(`[${user.username}] - fetched profile`)
+    console.warn(`[${user.username}] - fetched profile`)
 
     return profile
 }
@@ -120,14 +120,32 @@ const a_user_calls_editMyProfile = async (user, input) => {
     const data = await GraphQL(process.env.API_URL, editMyProfile, variables, user.accessToken)
     const profile = data.editMyProfile
 
-    console.log(`[${user.username}] - edited profile`)
+    console.warn(`[${user.username}] - edited profile`)
 
     return profile
+}
+
+const a_user_calls_getImageUploadUrl = async (user, extension, contentType) => {
+    const getImageUploadUrl = `query getImageUploadUrl($extension: String, $contentType: String) {
+    getImageUploadUrl(extension: $extension, contentType: $contentType)
+  }`
+    const variables = {
+        extension,
+        contentType
+    }
+
+    const data = await GraphQL(process.env.API_URL, getImageUploadUrl, variables, user.accessToken)
+    const url = data.getImageUploadUrl
+
+    console.warn(`[${url}] - got image upload url`)
+
+    return url
 }
 
 module.exports = {
     a_user_signs_up,
     we_invoke_confirmUserSignup,
     a_user_calls_getMyProfile,
-    a_user_calls_editMyProfile
+    a_user_calls_editMyProfile,
+    a_user_calls_getImageUploadUrl
 }

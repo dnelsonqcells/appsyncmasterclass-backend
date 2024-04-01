@@ -50,9 +50,8 @@ appSync:
       - dataSource: usersTable
         code: resolvers/getMyProfile.js
     Query.getImageUploadUrl:
-      - dataSource: getImageUploadUrl
-        request: false
-        response: false
+      functions:
+      - dataSource: getImageUploadUrlFunction
     Mutation.editMyProfile:
       functions:
         - dataSource: usersTable
@@ -83,12 +82,12 @@ functions:
     handler: functions/get-upload-url.handler
     environment:
       BUCKET_NAME: !Ref AssetsBucket
-      iamRoleStatements:
-        - Effect: Allow
-          Action:
-            - s3:PutObject
-            - s3:PutObjectAcl
-          Resource: !Sub ${AssetsBucket.Arn}/*
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - s3:PutObject
+          - s3:PutObjectAcl
+        Resource: !Sub ${AssetsBucket.Arn}/*
 
 resources:
   Resources:
@@ -156,7 +155,16 @@ resources:
           AccelerationStatus: Enabled
         CorsConfiguration:
           CorsRules:
-            -
+            - AllowedMethods:
+                - GET
+                - PUT
+              AllowedOrigins:
+                - '*'
+              AllowedHeaders:
+                - '*'
+        OwnershipControls:
+          Rules:
+            - ObjectOwnership: ObjectWriter
 
   Outputs:
     AwsRegion:
