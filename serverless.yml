@@ -47,8 +47,12 @@ appSync:
   resolvers:
     Query.getMyProfile:
       functions:
-      - dataSource: usersTable
-        code: resolvers/getMyProfile.js
+        - dataSource: usersTable
+          code: resolvers/getMyProfile.js
+    Query.getTweets:
+      functions:
+        - dataSource: tweetsTable
+          code: resolvers/getTweets.js
     Query.getImageUploadUrl:
       functions:
       - dataSource: getImageUploadUrlFunction
@@ -59,6 +63,13 @@ appSync:
     Mutation.tweet:
       functions:
         - dataSource: tweetFunction
+    # Nested Fields
+    Tweet.profile:
+      functions:
+        - dataSource: usersTable
+          code: resolvers/Tweet.profile.js
+
+
   dataSources:
     none:
       type: NONE
@@ -66,6 +77,10 @@ appSync:
       type: AMAZON_DYNAMODB
       config:
         tableName: !Ref UsersTable
+    tweetsTable:
+      type: AMAZON_DYNAMODB
+      config:
+        tableName: !Ref TweetsTable
     getImageUploadUrlFunction:
       type: AWS_LAMBDA
       config:
