@@ -45,6 +45,7 @@ appSync:
   logging:
     level: ALL
   resolvers:
+    # Queries
     Query.getMyProfile:
       functions:
         - dataSource: usersTable
@@ -55,7 +56,12 @@ appSync:
           code: resolvers/getTweets.js
     Query.getImageUploadUrl:
       functions:
-      - dataSource: getImageUploadUrlFunction
+        - dataSource: getImageUploadUrlFunction
+    Query.getMyTimeline:
+      functions:
+        - dataSource: timelinesTable
+          code: resolvers/getMyTimeline.js
+    # Mutations
     Mutation.editMyProfile:
       functions:
         - dataSource: usersTable
@@ -68,7 +74,13 @@ appSync:
       functions:
         - dataSource: usersTable
           code: resolvers/Tweet.profile.js
+    TimelinePage.tweets:
+      functions:
+        - dataSource: tweetsTable
+          code:  resolvers/TimelinesPage.tweets.js
 
+  substitutions:
+    TWEETS_TABLE: !Ref TweetsTable
 
   dataSources:
     none:
@@ -81,6 +93,10 @@ appSync:
       type: AMAZON_DYNAMODB
       config:
         tableName: !Ref TweetsTable
+    timelinesTable:
+      type: AMAZON_DYNAMODB
+      config:
+        tableName: !Ref TimelinesTable
     getImageUploadUrlFunction:
       type: AWS_LAMBDA
       config:
