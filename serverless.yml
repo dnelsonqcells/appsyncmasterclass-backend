@@ -69,6 +69,10 @@ appSync:
     Mutation.tweet:
       functions:
         - dataSource: tweetFunction
+    Mutation.like:
+      functions:
+        - dataSource: likesMutation
+          code: resolvers/like.js
     # Nested Fields
     Tweet.profile:
       functions:
@@ -81,6 +85,8 @@ appSync:
 
   substitutions:
     TWEETS_TABLE: !Ref TweetsTable
+    LIKES_TABLE: !Ref LikesTable
+    USERS_TABLE: !Ref UsersTable
 
   dataSources:
     none:
@@ -97,6 +103,25 @@ appSync:
       type: AMAZON_DYNAMODB
       config:
         tableName: !Ref TimelinesTable
+    likesTable:
+      type: AMAZON_DYNAMODB
+      config:
+        tableName: !Ref LikesTable
+    likesMutation:
+      type: AMAZON_DYNAMODB
+      config:
+        tableName: !Ref LikesTable
+        iamRoleStatements:
+          - Effect: Allow
+            Action:
+              - dynamodb:PutItem
+            Resource: !GetAtt LikesTable.Arn
+          - Effect: Allow
+            Action:
+              - dynamodb:UpdateItem
+            Resource:
+              - !GetAtt UsersTable.Arn
+              - !GetAtt TweetsTable.Arn
     getImageUploadUrlFunction:
       type: AWS_LAMBDA
       config:
@@ -187,6 +212,26 @@ resources:
             Value: ${self:custom.stage}
           - Key: Name
             Value: tweets-table
+
+    LikesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        BillingMode: PAY_PER_REQUEST
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: tweetId
+            KeyType: RANGE
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: tweetId
+            AttributeType: S
+        Tags:
+          - Key: Environment
+            Value: ${self:custom.stage}
+          - Key: Name
+            Value: likes-table
 
     TimelinesTable:
       Type: AWS::DynamoDB::Table

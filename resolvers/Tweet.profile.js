@@ -1,6 +1,18 @@
-import { util } from '@aws-appsync/utils';
+import { util, runtime } from '@aws-appsync/utils';
 
 export function request(ctx) {
+    if (ctx.info.selectionSetList.length === 1 && ctx.info.selectionSetList[0] === 'id') {
+        const result = {id: ctx.source.creator}
+
+        if (ctx.source.creator === ctx.identity.username) {
+            result['__typename'] = 'MyProfile'
+        } else {
+            result['__typename'] = 'OtherProfile'
+        }
+
+        runtime.earlyReturn(result)
+    }
+
     return {
         operation: 'GetItem',
         key: util.dynamodb.toMapValues({id: ctx.source.creator}),
