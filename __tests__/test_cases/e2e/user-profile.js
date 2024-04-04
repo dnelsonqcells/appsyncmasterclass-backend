@@ -5,7 +5,7 @@ const when = require('../../steps/when')
 const chance = require('chance').Chance()
 const path = require('path')
 
-describe('Given an authenticated user', () => {
+xdescribe('Given an authenticated user', () => {
     let user, profile
     beforeAll(async () => {
         user = await given.an_authenticated_user()

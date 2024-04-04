@@ -73,11 +73,19 @@ appSync:
       functions:
         - dataSource: likesMutation
           code: resolvers/like.js
+    Mutation.unlike:
+      functions:
+        - dataSource: unlikeMutation
+          code: resolvers/unlike.js
     # Nested Fields
     Tweet.profile:
       functions:
         - dataSource: usersTable
           code: resolvers/Tweet.profile.js
+    Tweet.liked:
+      functions:
+        - dataSource: likesTable
+          code: resolvers/Tweet.liked.js
     TimelinePage.tweets:
       functions:
         - dataSource: tweetsTable
@@ -115,6 +123,21 @@ appSync:
           - Effect: Allow
             Action:
               - dynamodb:PutItem
+            Resource: !GetAtt LikesTable.Arn
+          - Effect: Allow
+            Action:
+              - dynamodb:UpdateItem
+            Resource:
+              - !GetAtt UsersTable.Arn
+              - !GetAtt TweetsTable.Arn
+    unlikeMutation:
+      type: AMAZON_DYNAMODB
+      config:
+        tableName: !Ref LikesTable
+        iamRoleStatements:
+          - Effect: Allow
+            Action:
+              - dynamodb:DeleteItem
             Resource: !GetAtt LikesTable.Arn
           - Effect: Allow
             Action:

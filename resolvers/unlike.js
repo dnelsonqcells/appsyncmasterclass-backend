@@ -8,10 +8,10 @@ export function request(ctx) {
         transactItems: [
             {
                 table: '#LIKES_TABLE#',
-                operation: 'PutItem',
+                operation: 'DeleteItem',
                 key: util.dynamodb.toMapValues({userId: username, tweetId}),
                 condition: {
-                    "expression": "attribute_not_exists(tweetId)"
+                    "expression": "attribute_exists(tweetId)"
                 },
             },
             {
@@ -20,7 +20,7 @@ export function request(ctx) {
                 key: util.dynamodb.toMapValues({ id: tweetId }),
                 update: {
                     expression: 'ADD likes :one',
-                    expressionValues: util.dynamodb.toMapValues({ ':one': 1 }),
+                    expressionValues: util.dynamodb.toMapValues({ ':one': -1 }),
                 },
                 condition: {
                     "expression": "attribute_exists(id)"
@@ -32,7 +32,7 @@ export function request(ctx) {
                 key: util.dynamodb.toMapValues({ id: username }),
                 update: {
                     expression: 'ADD likesCounts :one',
-                    expressionValues: util.dynamodb.toMapValues({ ':one': 1 }),
+                    expressionValues: util.dynamodb.toMapValues({ ':one': -1 }),
                 },
                 condition: {
                     "expression": "attribute_exists(id)"

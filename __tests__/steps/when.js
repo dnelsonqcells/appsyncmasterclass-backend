@@ -1,6 +1,174 @@
 require('dotenv').config({ path: ['.env.local', '.env'] })
 const AWS = require('aws-sdk')
 const { GraphQL, registerFragment } = require('../../lib/graphql')
+
+
+const myProfileFragment = `
+fragment myProfileFields on MyProfile {
+  id
+  name
+  screenName
+  imageUrl
+  backgroundImageUrl
+  bio
+  location
+  website
+  birthdate
+  createdAt
+  followersCount
+  followingCount
+  tweetsCount
+  likesCounts  
+}
+`
+
+const otherProfileFragment = `
+fragment otherProfileFields on OtherProfile {
+  id
+  name
+  screenName
+  imageUrl
+  backgroundImageUrl
+  bio
+  location
+  website
+  birthdate
+  createdAt
+  followersCount
+  followingCount
+  tweetsCount
+  likesCounts
+  # following
+  # followedBy
+}
+`
+
+const iProfileFragment = `
+fragment iProfileFields on IProfile {
+  ... on MyProfile {
+    ... myProfileFields
+  }
+
+  ... on OtherProfile {
+    ... otherProfileFields
+  }
+}
+`
+
+const tweetFragment = `
+fragment tweetFields on Tweet {
+  id
+  profile {
+    ... iProfileFields
+  }
+  createdAt
+  text
+  replies
+  likes
+  # retweets
+  # retweeted
+  liked
+}
+`
+
+const retweetFragment = `
+fragment retweetFields on Retweet {
+  id
+  profile {
+    ... iProfileFields
+  }
+  createdAt
+  retweetOf {
+    ... on Tweet {
+      ... tweetFields
+    }
+
+    ... on Reply {
+      ... replyFields
+    }
+  }
+}
+`
+
+const replyFragment = `
+fragment replyFields on Reply {
+  id
+  profile {
+    ... iProfileFields
+  }
+  createdAt
+  text
+  replies
+  likes
+  retweets
+  retweeted
+  liked
+  inReplyToTweet {
+    id
+    profile {
+      ... iProfileFields
+    }
+    createdAt
+    ... on Tweet {
+      replies
+    }
+    ... on Reply {
+      replies
+    }
+  }
+  inReplyToUsers {
+    ... iProfileFields
+  }
+}
+`
+
+const iTweetFragment = `
+fragment iTweetFields on ITweet {
+  ... on Tweet {
+    ... tweetFields
+  }
+
+  ... on Retweet {
+    ... retweetFields
+  }
+
+  ... on Reply {
+    ... replyFields
+  }
+}
+`
+
+const conversationFragment = `
+fragment conversationFields on Conversation {
+  id
+  otherUser {
+    ... otherProfileFields
+  }
+  lastMessage
+  lastModified
+}
+`
+
+const messageFragment = `
+fragment messageFields on Message {
+  messageId
+  from {
+    ... iProfileFields
+  }
+  message
+  timestamp
+}
+`
+
+registerFragment('myProfileFields', myProfileFragment)
+registerFragment('otherProfileFields', otherProfileFragment)
+registerFragment('iProfileFields', iProfileFragment)
+registerFragment('tweetFields', tweetFragment)
+registerFragment('retweetFields', retweetFragment)
+registerFragment('replyFields', replyFragment)
+registerFragment('iTweetFields', iTweetFragment)
+registerFragment('conversationFields', conversationFragment)
+registerFragment('messageFields', messageFragment)
 const a_user_signs_up = async (password, name, email) => {
     const cognito = new AWS.CognitoIdentityServiceProvider()
 
@@ -60,25 +228,16 @@ const we_invoke_confirmUserSignup = async (username, name, email) => {
 }
 
 const a_user_calls_getMyProfile = async (user) => {
-  //   const getMyProfile = `query getMyProfile {
-  //   getMyProfile {
-  //     ... myProfileFields
-  //
-  //     tweets {
-  //       nextToken
-  //       tweets {
-  //         ... iTweetFields
-  //       }
-  //     }
-  //   }
-  // }`
     const getMyProfile = `query getMyProfile {
     getMyProfile {
-         backgroundImageUrl
-        bio
-        followersCount
-        createdAt
-        birthdate
+      ... myProfileFields
+
+      tweets {
+        nextToken
+        tweets {
+          ... iTweetFields
+        }
+      }
     }
   }`
 
@@ -91,28 +250,19 @@ const a_user_calls_getMyProfile = async (user) => {
 }
 
 const a_user_calls_editMyProfile = async (user, input) => {
-  //   const editMyProfile = `mutation editMyProfile($input: ProfileInput!) {
-  //   editMyProfile(newProfile: $input) {
-  //     ... myProfileFields
-  //
-  //     tweets {
-  //       nextToken
-  //       tweets {
-  //         ... iTweetFields
-  //       }
-  //     }
-  //   }
-  // }`
     const editMyProfile = `mutation editMyProfile($input: ProfileInput!) {
     editMyProfile(newProfile: $input) {
-    backgroundImageUrl
-        bio
-        followersCount
-        createdAt
-        birthdate
-        name
+      ... myProfileFields
+
+      tweets {
+        nextToken
+        tweets {
+          ... iTweetFields
+        }
+      }
     }
   }`
+
     const variables = {
         input
     }
@@ -161,12 +311,7 @@ const we_invoke_tweet = async (username, text) => {
 const a_user_calls_tweet = async (user, text) => {
     const tweet = `mutation tweet($text: String!) {
     tweet(text: $text) {
-      id
-      createdAt
-      text
-      replies
-      likes
-      retweets
+      ... tweetFields
     }
   }`
     const variables = {
@@ -186,15 +331,7 @@ const a_user_calls_getTweets = async (user, userId, limit, nextToken) => {
     getTweets(userId: $userId, limit: $limit, nextToken: $nextToken) {
       nextToken
       tweets {
-        id
-        createdAt
-        
-        ... on Tweet {
-            text
-            likes
-            replies
-            retweets
-        }
+        ... iTweetFields
       }
     }
   }`
@@ -217,15 +354,7 @@ const a_user_calls_getMyTimeline = async (user, limit, nextToken) => {
     getMyTimeline(limit: $limit, nextToken: $nextToken) {
       nextToken
       tweets {
-        id
-        createdAt
-        
-        ... on Tweet {
-            text
-            likes
-            replies
-            retweets
-        }
+        ... iTweetFields
       }
     }
   }`
@@ -242,6 +371,38 @@ const a_user_calls_getMyTimeline = async (user, limit, nextToken) => {
     return result
 }
 
+const a_user_calls_like = async (user, tweetId) => {
+    const like = `mutation like($tweetId: ID!) {
+    like(tweetId: $tweetId)
+  }`
+    const variables = {
+        tweetId
+    }
+
+    const data = await GraphQL(process.env.API_URL, like, variables, user.accessToken)
+    const result = data.like
+
+    console.log(`[${user.username}] - liked tweet [${tweetId}]`)
+
+    return result
+}
+
+const a_user_calls_unlike = async (user, tweetId) => {
+    const unlike = `mutation unlike($tweetId: ID!) {
+    unlike(tweetId: $tweetId)
+  }`
+    const variables = {
+        tweetId
+    }
+
+    const data = await GraphQL(process.env.API_URL, unlike, variables, user.accessToken)
+    const result = data.unlike
+
+    console.log(`[${user.username}] - unliked tweet [${tweetId}]`)
+
+    return result
+}
+
 module.exports = {
     a_user_signs_up,
     we_invoke_confirmUserSignup,
@@ -251,5 +412,7 @@ module.exports = {
     we_invoke_tweet,
     a_user_calls_tweet,
     a_user_calls_getTweets,
-    a_user_calls_getMyTimeline
+    a_user_calls_getMyTimeline,
+    a_user_calls_like,
+    a_user_calls_unlike
 }
