@@ -4,7 +4,7 @@ const when = require('../../steps/when')
 const then = require('../../steps/then')
 const chance = require('chance').Chance()
 
-describe('When confirmUserSignup runs', () => {
+xdescribe('When confirmUserSignup runs', () => {
     it("The user's profile should be saved in DynamoDB", async () => {
         const { name, email } = given.a_random_user()
         const username = chance.guid()

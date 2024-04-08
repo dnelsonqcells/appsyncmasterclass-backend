@@ -10,7 +10,7 @@
     "jest": "jest",
     "test": "jest --verbose ./__tests__/test_cases/unit --silent",
     "test:integration": "jest --verbose ./__tests__/test_cases/integration --silent",
-    "test:e2e": "jest --verbose ./__tests__/test_cases/e2e"
+    "test:e2e": "jest --verbose ./__tests__/test_cases/e2e --silent"
   },
   "keywords": [],
   "author": "",

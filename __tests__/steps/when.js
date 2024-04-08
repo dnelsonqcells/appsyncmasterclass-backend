@@ -444,6 +444,39 @@ const a_user_calls_retweet = async (user, tweetId) => {
     return result
 }
 
+const we_invoke_reply = async (username, tweetId, text) => {
+    const handler = require('../../functions/reply').handler
+
+    const context = {}
+    const event = {
+        identity: {
+            username
+        },
+        arguments: {
+            tweetId,
+            text
+        }
+    }
+
+    return await handler(event, context)
+}
+
+const we_invoke_retweet = async (username, tweetId) => {
+    const handler = require('../../functions/retweet').handler
+
+    const context = {}
+    const event = {
+        identity: {
+            username
+        },
+        arguments: {
+            tweetId
+        }
+    }
+
+    return await handler(event, context)
+}
+
 module.exports = {
     a_user_signs_up,
     we_invoke_confirmUserSignup,
@@ -457,5 +490,7 @@ module.exports = {
     a_user_calls_like,
     a_user_calls_unlike,
     a_user_calls_getLikes,
-    a_user_calls_retweet
+    a_user_calls_retweet,
+    we_invoke_reply,
+    we_invoke_retweet
 }
