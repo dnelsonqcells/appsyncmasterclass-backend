@@ -61,6 +61,10 @@ appSync:
       functions:
         - dataSource: timelinesTable
           code: resolvers/getMyTimeline.js
+    Query.getLikes:
+      functions:
+        - dataSource: likesTable
+          code: resolvers/getMyTimeline.js
     # Mutations
     Mutation.editMyProfile:
       functions:
@@ -69,6 +73,9 @@ appSync:
     Mutation.tweet:
       functions:
         - dataSource: tweetFunction
+    Mutation.retweet:
+      functions:
+        - dataSource: retweetFunction
     Mutation.like:
       functions:
         - dataSource: likesMutation
@@ -82,14 +89,30 @@ appSync:
       functions:
         - dataSource: usersTable
           code: resolvers/Tweet.profile.js
+    Retweet.profile:
+      functions:
+        - dataSource: usersTable
+          code: resolvers/Tweet.profile.js
     Tweet.liked:
       functions:
         - dataSource: likesTable
           code: resolvers/Tweet.liked.js
-    TimelinePage.tweets:
+    Tweet.retweeted:
+      functions:
+        - dataSource: retweetsTable
+          code: resolvers/Tweet.retweeted.js
+    Retweet.retweetOf:
       functions:
         - dataSource: tweetsTable
-          code:  resolvers/TimelinesPage.tweets.js
+          code: resolvers/Retweet.retweetOf.js
+    UnhydratedTweetsPage.tweets:
+      functions:
+        - dataSource: tweetsTable
+          code:  resolvers/UnhydratedTweetsPage.tweets.js
+    MyProfile.tweets:
+      functions:
+        - dataSource: tweetsTable
+          code:  resolvers/MyProfile.tweets.js
 
   substitutions:
     TWEETS_TABLE: !Ref TweetsTable
@@ -107,6 +130,10 @@ appSync:
       type: AMAZON_DYNAMODB
       config:
         tableName: !Ref TweetsTable
+    retweetsTable:
+      type: AMAZON_DYNAMODB
+      config:
+        tableName: !Ref RetweetsTable
     timelinesTable:
       type: AMAZON_DYNAMODB
       config:
@@ -153,6 +180,14 @@ appSync:
       type: AWS_LAMBDA
       config:
         functionName: tweet
+    retweetFunction:
+      type: AWS_LAMBDA
+      config:
+        functionName: retweet
+    unretweetFunction:
+      type: AWS_LAMBDA
+      config:
+        functionName: unretweet
 
 functions:
   confirmUserSignup:
@@ -191,6 +226,55 @@ functions:
           - !GetAtt TweetsTable.Arn
           - !GetAtt TimelinesTable.Arn
 
+  retweet:
+    handler: functions/retweet.handler
+    environment:
+      USERS_TABLE: !Ref UsersTable
+      TWEETS_TABLE: !Ref TweetsTable
+      TIMELINES_TABLE: !Ref TimelinesTable
+      RETWEETS_TABLE: !Ref RetweetsTable
+    iamRoleStatements:
+      - Effect: Allow
+        Action: dynamodb:GetItem
+        Resource: !GetAtt TweetsTable.Arn
+      - Effect: Allow
+        Action: dynamodb:UpdateItem
+        Resource:
+          - !GetAtt TweetsTable.Arn
+          - !GetAtt UsersTable.Arn
+      - Effect: Allow
+        Action: dynamodb:PutItem
+        Resource:
+          - !GetAtt TweetsTable.Arn
+          - !GetAtt TimelinesTable.Arn
+          - !GetAtt RetweetsTable.Arn
+
+  unretweet:
+    handler: functions/unretweet.handler
+    environment:
+      USERS_TABLE: !Ref UsersTable
+      TWEETS_TABLE: !Ref TweetsTable
+      TIMELINES_TABLE: !Ref TimelinesTable
+      RETWEETS_TABLE: !Ref RetweetsTable
+    iamRoleStatements:
+      - Effect: Allow
+        Action: dynamodb:GetItem
+        Resource: !GetAtt TweetsTable.Arn
+      - Effect: Allow
+        Action: dynamodb:Query
+        Resource: !Sub "${TweetsTable.Arn}/index/retweetsByCreator"
+      - Effect: Allow
+        Action: dynamodb:UpdateItem
+        Resource:
+          - !GetAtt TweetsTable.Arn
+          - !GetAtt UsersTable.Arn
+      - Effect: Allow
+        Action: dynamodb:DeleteItem
+        Resource:
+          - !GetAtt TweetsTable.Arn
+          - !GetAtt TimelinesTable.Arn
+          - !GetAtt RetweetsTable.Arn
+
 resources:
   Resources:
     UsersTable:
@@ -221,12 +305,22 @@ resources:
             AttributeType: S
           - AttributeName: creator
             AttributeType: S
+          - AttributeName: retweetOf
+            AttributeType: S
         GlobalSecondaryIndexes:
           - IndexName: byCreator
             KeySchema:
               - AttributeName: creator
                 KeyType: HASH
               - AttributeName: id
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: retweetsByCreator
+            KeySchema:
+              - AttributeName: creator
+                KeyType: HASH
+              - AttributeName: retweetOf
                 KeyType: RANGE
             Projection:
               ProjectionType: ALL
@@ -255,6 +349,26 @@ resources:
             Value: ${self:custom.stage}
           - Key: Name
             Value: likes-table
+
+    RetweetsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        BillingMode: PAY_PER_REQUEST
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: tweetId
+            KeyType: RANGE
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: tweetId
+            AttributeType: S
+        Tags:
+          - Key: Environment
+            Value: ${self:custom.stage}
+          - Key: Name
+            Value: retweets-table
 
     TimelinesTable:
       Type: AWS::DynamoDB::Table

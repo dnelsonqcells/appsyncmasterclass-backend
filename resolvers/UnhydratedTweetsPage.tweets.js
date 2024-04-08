@@ -1,6 +1,10 @@
-import {util} from '@aws-appsync/utils';
+import { util, runtime } from '@aws-appsync/utils';
 
 export function request(ctx) {
+    if (!ctx.source.tweets.length) {
+        runtime.earlyReturn([])
+    }
+
     return {
         operation: 'BatchGetItem',
         tables: {
