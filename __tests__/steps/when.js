@@ -1,7 +1,6 @@
-require('dotenv').config({ path: ['.env.local', '.env'] })
-const AWS = require('aws-sdk')
-const { GraphQL, registerFragment } = require('../../lib/graphql')
-
+require("dotenv").config({ path: [".env.local", ".env"] });
+const AWS = require("aws-sdk");
+const { GraphQL, registerFragment } = require("../../lib/graphql");
 
 const myProfileFragment = `
 fragment myProfileFields on MyProfile {
@@ -20,7 +19,7 @@ fragment myProfileFields on MyProfile {
   tweetsCount
   likesCounts  
 }
-`
+`;
 
 const otherProfileFragment = `
 fragment otherProfileFields on OtherProfile {
@@ -41,7 +40,7 @@ fragment otherProfileFields on OtherProfile {
   # following
   # followedBy
 }
-`
+`;
 
 const iProfileFragment = `
 fragment iProfileFields on IProfile {
@@ -53,7 +52,7 @@ fragment iProfileFields on IProfile {
     ... otherProfileFields
   }
 }
-`
+`;
 
 const tweetFragment = `
 fragment tweetFields on Tweet {
@@ -69,7 +68,7 @@ fragment tweetFields on Tweet {
   retweeted
   liked
 }
-`
+`;
 
 const retweetFragment = `
 fragment retweetFields on Retweet {
@@ -88,7 +87,7 @@ fragment retweetFields on Retweet {
     }
   }
 }
-`
+`;
 
 const replyFragment = `
 fragment replyFields on Reply {
@@ -120,7 +119,7 @@ fragment replyFields on Reply {
     ... iProfileFields
   }
 }
-`
+`;
 
 const iTweetFragment = `
 fragment iTweetFields on ITweet {
@@ -136,7 +135,7 @@ fragment iTweetFields on ITweet {
     ... replyFields
   }
 }
-`
+`;
 
 const conversationFragment = `
 fragment conversationFields on Conversation {
@@ -147,7 +146,7 @@ fragment conversationFields on Conversation {
   lastMessage
   lastModified
 }
-`
+`;
 
 const messageFragment = `
 fragment messageFields on Message {
@@ -158,77 +157,79 @@ fragment messageFields on Message {
   message
   timestamp
 }
-`
+`;
 
-registerFragment('myProfileFields', myProfileFragment)
-registerFragment('otherProfileFields', otherProfileFragment)
-registerFragment('iProfileFields', iProfileFragment)
-registerFragment('tweetFields', tweetFragment)
-registerFragment('retweetFields', retweetFragment)
-registerFragment('replyFields', replyFragment)
-registerFragment('iTweetFields', iTweetFragment)
-registerFragment('conversationFields', conversationFragment)
-registerFragment('messageFields', messageFragment)
+registerFragment("myProfileFields", myProfileFragment);
+registerFragment("otherProfileFields", otherProfileFragment);
+registerFragment("iProfileFields", iProfileFragment);
+registerFragment("tweetFields", tweetFragment);
+registerFragment("retweetFields", retweetFragment);
+registerFragment("replyFields", replyFragment);
+registerFragment("iTweetFields", iTweetFragment);
+registerFragment("conversationFields", conversationFragment);
+registerFragment("messageFields", messageFragment);
 const a_user_signs_up = async (password, name, email) => {
-    const cognito = new AWS.CognitoIdentityServiceProvider()
+	const cognito = new AWS.CognitoIdentityServiceProvider();
 
-    const userPoolId = process.env.CognitoUserPoolId
-    const clientId = process.env.WebCognitoUserPoolClientId
+	const userPoolId = process.env.CognitoUserPoolId;
+	const clientId = process.env.WebCognitoUserPoolClientId;
 
-    const signUpResp = await cognito.signUp({
-        ClientId: clientId,
-        Username: email,
-        Password: password,
-        UserAttributes: [
-            { Name: 'name', Value: name }
-        ]
-    }).promise()
+	const signUpResp = await cognito
+		.signUp({
+			ClientId: clientId,
+			Username: email,
+			Password: password,
+			UserAttributes: [{ Name: "name", Value: name }],
+		})
+		.promise();
 
-    const username = signUpResp.UserSub
-    console.warn(`[${email}] - user has signed up [${username}]`)
+	const username = signUpResp.UserSub;
+	console.warn(`[${email}] - user has signed up [${username}]`);
 
-    await cognito.adminConfirmSignUp({
-        UserPoolId: userPoolId,
-        Username: username
-    }).promise()
+	await cognito
+		.adminConfirmSignUp({
+			UserPoolId: userPoolId,
+			Username: username,
+		})
+		.promise();
 
-    console.warn(`[${email}] - confirmed sign up`)
+	console.warn(`[${email}] - confirmed sign up`);
 
-    return {
-        username,
-        name,
-        email
-    }
-}
+	return {
+		username,
+		name,
+		email,
+	};
+};
 
 const we_invoke_confirmUserSignup = async (username, name, email) => {
-    const handler = require('../../functions/confirm-user-signup').handler
+	const handler = require("../../functions/confirm-user-signup").handler;
 
-    const context = {}
-    const event = {
-        "version": "1",
-        "region": process.env.AwsRegion,
-        "userPoolId": process.env.CognitoUserPoolId,
-        "userName": username,
-        "triggerSource": "PostConfirmation_ConfirmSignUp",
-        "request": {
-            "userAttributes": {
-                "sub": username,
-                "cognito:email_alias": email,
-                "cognito:user_status": "CONFIRMED",
-                "email_verified": "false",
-                "name": name,
-                "email": email
-            }
-        },
-        "response": {}
-    }
+	const context = {};
+	const event = {
+		version: "1",
+		region: process.env.AwsRegion,
+		userPoolId: process.env.CognitoUserPoolId,
+		userName: username,
+		triggerSource: "PostConfirmation_ConfirmSignUp",
+		request: {
+			userAttributes: {
+				sub: username,
+				"cognito:email_alias": email,
+				"cognito:user_status": "CONFIRMED",
+				email_verified: "false",
+				name: name,
+				email: email,
+			},
+		},
+		response: {},
+	};
 
-    await handler(event, context)
-}
+	await handler(event, context);
+};
 
 const a_user_calls_getMyProfile = async (user) => {
-    const getMyProfile = `query getMyProfile {
+	const getMyProfile = `query getMyProfile {
     getMyProfile {
       ... myProfileFields
 
@@ -239,18 +240,23 @@ const a_user_calls_getMyProfile = async (user) => {
         }
       }
     }
-  }`
+  }`;
 
-    const data = await GraphQL(process.env.API_URL, getMyProfile, {}, user.accessToken)
-    const profile = data.getMyProfile
+	const data = await GraphQL(
+		process.env.API_URL,
+		getMyProfile,
+		{},
+		user.accessToken,
+	);
+	const profile = data.getMyProfile;
 
-    console.warn(`[${user.username}] - fetched profile`)
+	console.warn(`[${user.username}] - fetched profile`);
 
-    return profile
-}
+	return profile;
+};
 
 const a_user_calls_editMyProfile = async (user, input) => {
-    const editMyProfile = `mutation editMyProfile($input: ProfileInput!) {
+	const editMyProfile = `mutation editMyProfile($input: ProfileInput!) {
     editMyProfile(newProfile: $input) {
       ... myProfileFields
 
@@ -261,236 +267,306 @@ const a_user_calls_editMyProfile = async (user, input) => {
         }
       }
     }
-  }`
+  }`;
 
-    const variables = {
-        input
-    }
+	const variables = {
+		input,
+	};
 
-    const data = await GraphQL(process.env.API_URL, editMyProfile, variables, user.accessToken)
-    const profile = data.editMyProfile
+	const data = await GraphQL(
+		process.env.API_URL,
+		editMyProfile,
+		variables,
+		user.accessToken,
+	);
+	const profile = data.editMyProfile;
 
-    console.warn(`[${user.username}] - edited profile`)
+	console.warn(`[${user.username}] - edited profile`);
 
-    return profile
-}
+	return profile;
+};
 
 const a_user_calls_getImageUploadUrl = async (user, extension, contentType) => {
-    const getImageUploadUrl = `query getImageUploadUrl($extension: String, $contentType: String) {
+	const getImageUploadUrl = `query getImageUploadUrl($extension: String, $contentType: String) {
     getImageUploadUrl(extension: $extension, contentType: $contentType)
-  }`
-    const variables = {
-        extension,
-        contentType
-    }
+  }`;
+	const variables = {
+		extension,
+		contentType,
+	};
 
-    const data = await GraphQL(process.env.API_URL, getImageUploadUrl, variables, user.accessToken)
-    const url = data.getImageUploadUrl
+	const data = await GraphQL(
+		process.env.API_URL,
+		getImageUploadUrl,
+		variables,
+		user.accessToken,
+	);
+	const url = data.getImageUploadUrl;
 
-    console.warn(`[${url}] - got image upload url`)
+	console.warn(`[${url}] - got image upload url`);
 
-    return url
-}
+	return url;
+};
 
 const we_invoke_tweet = async (username, text) => {
-    const handler = require('../../functions/tweet').handler
+	const handler = require("../../functions/tweet").handler;
 
-    const context = {}
-    const event = {
-        identity: {
-            username
-        },
-        arguments: {
-            text
-        }
-    }
+	const context = {};
+	const event = {
+		identity: {
+			username,
+		},
+		arguments: {
+			text,
+		},
+	};
 
-    return await handler(event, context)
-}
+	return await handler(event, context);
+};
 
 const a_user_calls_tweet = async (user, text) => {
-    const tweet = `mutation tweet($text: String!) {
+	const tweet = `mutation tweet($text: String!) {
     tweet(text: $text) {
       ... tweetFields
     }
-  }`
-    const variables = {
-        text
-    }
+  }`;
+	const variables = {
+		text,
+	};
 
-    const data = await GraphQL(process.env.API_URL, tweet, variables, user.accessToken)
-    const newTweet = data.tweet
+	const data = await GraphQL(
+		process.env.API_URL,
+		tweet,
+		variables,
+		user.accessToken,
+	);
+	const newTweet = data.tweet;
 
-    console.log(`[${user.username}] - posted new tweet`)
+	console.log(`[${user.username}] - posted new tweet`);
 
-    return newTweet
-}
+	return newTweet;
+};
 
 const a_user_calls_getTweets = async (user, userId, limit, nextToken) => {
-    const getTweets = `query getTweets($userId: ID!, $limit: Int!, $nextToken: String) {
+	const getTweets = `query getTweets($userId: ID!, $limit: Int!, $nextToken: String) {
     getTweets(userId: $userId, limit: $limit, nextToken: $nextToken) {
       nextToken
       tweets {
         ... iTweetFields
       }
     }
-  }`
-    const variables = {
-        userId,
-        limit,
-        nextToken
-    }
+  }`;
+	const variables = {
+		userId,
+		limit,
+		nextToken,
+	};
 
-    const data = await GraphQL(process.env.API_URL, getTweets, variables, user.accessToken)
-    const result = data.getTweets
+	const data = await GraphQL(
+		process.env.API_URL,
+		getTweets,
+		variables,
+		user.accessToken,
+	);
+	const result = data.getTweets;
 
-    console.log(`[${user.username}] - posted new tweet`)
+	console.log(`[${user.username}] - posted new tweet`);
 
-    return result
-}
+	return result;
+};
 
 const a_user_calls_getMyTimeline = async (user, limit, nextToken) => {
-    const getMyTimeline = `query getMyTimeline($limit: Int!, $nextToken: String) {
+	const getMyTimeline = `query getMyTimeline($limit: Int!, $nextToken: String) {
     getMyTimeline(limit: $limit, nextToken: $nextToken) {
       nextToken
       tweets {
         ... iTweetFields
       }
     }
-  }`
-    const variables = {
-        limit,
-        nextToken
-    }
+  }`;
+	const variables = {
+		limit,
+		nextToken,
+	};
 
-    const data = await GraphQL(process.env.API_URL, getMyTimeline, variables, user.accessToken)
-    const result = data.getMyTimeline
+	const data = await GraphQL(
+		process.env.API_URL,
+		getMyTimeline,
+		variables,
+		user.accessToken,
+	);
+	const result = data.getMyTimeline;
 
-    console.log(`[${user.username}] - fetched timeline`)
+	console.log(`[${user.username}] - fetched timeline`);
 
-    return result
-}
+	return result;
+};
 
 const a_user_calls_like = async (user, tweetId) => {
-    const like = `mutation like($tweetId: ID!) {
+	const like = `mutation like($tweetId: ID!) {
     like(tweetId: $tweetId)
-  }`
-    const variables = {
-        tweetId
-    }
+  }`;
+	const variables = {
+		tweetId,
+	};
 
-    const data = await GraphQL(process.env.API_URL, like, variables, user.accessToken)
-    const result = data.like
+	const data = await GraphQL(
+		process.env.API_URL,
+		like,
+		variables,
+		user.accessToken,
+	);
+	const result = data.like;
 
-    console.log(`[${user.username}] - liked tweet [${tweetId}]`)
+	console.log(`[${user.username}] - liked tweet [${tweetId}]`);
 
-    return result
-}
+	return result;
+};
 
 const a_user_calls_unlike = async (user, tweetId) => {
-    const unlike = `mutation unlike($tweetId: ID!) {
+	const unlike = `mutation unlike($tweetId: ID!) {
     unlike(tweetId: $tweetId)
-  }`
-    const variables = {
-        tweetId
-    }
+  }`;
+	const variables = {
+		tweetId,
+	};
 
-    const data = await GraphQL(process.env.API_URL, unlike, variables, user.accessToken)
-    const result = data.unlike
+	const data = await GraphQL(
+		process.env.API_URL,
+		unlike,
+		variables,
+		user.accessToken,
+	);
+	const result = data.unlike;
 
-    console.log(`[${user.username}] - unliked tweet [${tweetId}]`)
+	console.log(`[${user.username}] - unliked tweet [${tweetId}]`);
 
-    return result
-}
+	return result;
+};
 
 const a_user_calls_getLikes = async (user, userId, limit, nextToken) => {
-    const getLikes = `query getLikes($userId: ID!, $limit: Int!, $nextToken: String) {
+	const getLikes = `query getLikes($userId: ID!, $limit: Int!, $nextToken: String) {
     getLikes(userId: $userId, limit: $limit, nextToken: $nextToken) {
       nextToken
       tweets {
         ... iTweetFields
       }
     }
-  }`
-    const variables = {
-        userId,
-        limit,
-        nextToken
-    }
+  }`;
+	const variables = {
+		userId,
+		limit,
+		nextToken,
+	};
 
-    const data = await GraphQL(process.env.API_URL, getLikes, variables, user.accessToken)
-    const result = data.getLikes
+	const data = await GraphQL(
+		process.env.API_URL,
+		getLikes,
+		variables,
+		user.accessToken,
+	);
+	const result = data.getLikes;
 
-    console.log(`[${user.username}] - fetched likes`)
+	console.log(`[${user.username}] - fetched likes`);
 
-    return result
-}
+	return result;
+};
 
 const a_user_calls_retweet = async (user, tweetId) => {
-    const retweet = `mutation retweet($tweetId: ID!) {
+	const retweet = `mutation retweet($tweetId: ID!) {
     retweet(tweetId: $tweetId) {
       ... retweetFields
     }
-  }`
-    const variables = {
-        tweetId
-    }
+  }`;
+	const variables = {
+		tweetId,
+	};
 
-    const data = await GraphQL(process.env.API_URL, retweet, variables, user.accessToken)
-    const result = data.retweet
+	const data = await GraphQL(
+		process.env.API_URL,
+		retweet,
+		variables,
+		user.accessToken,
+	);
+	const result = data.retweet;
 
-    console.log(`[${user.username}] - retweeted tweet [${tweetId}]`)
+	console.log(`[${user.username}] - retweeted tweet [${tweetId}]`);
 
-    return result
-}
+	return result;
+};
 
 const we_invoke_reply = async (username, tweetId, text) => {
-    const handler = require('../../functions/reply').handler
+	const handler = require("../../functions/reply").handler;
 
-    const context = {}
-    const event = {
-        identity: {
-            username
-        },
-        arguments: {
-            tweetId,
-            text
-        }
-    }
+	const context = {};
+	const event = {
+		identity: {
+			username,
+		},
+		arguments: {
+			tweetId,
+			text,
+		},
+	};
 
-    return await handler(event, context)
-}
+	return await handler(event, context);
+};
 
 const we_invoke_retweet = async (username, tweetId) => {
-    const handler = require('../../functions/retweet').handler
+	const handler = require("../../functions/retweet").handler;
 
-    const context = {}
-    const event = {
-        identity: {
-            username
-        },
-        arguments: {
-            tweetId
-        }
+	const context = {};
+	const event = {
+		identity: {
+			username,
+		},
+		arguments: {
+			tweetId,
+		},
+	};
+
+	return await handler(event, context);
+};
+
+const a_user_calls_reply = async (user, tweetId, text) => {
+	const reply = `mutation reply($tweetId: ID!, $text: String!) {
+    reply(tweetId: $tweetId, text: $text) {
+      ... replyFields
     }
+  }`;
+	const variables = {
+		tweetId,
+		text,
+	};
 
-    return await handler(event, context)
-}
+	const data = await GraphQL(
+		process.env.API_URL,
+		reply,
+		variables,
+		user.accessToken,
+	);
+	const result = data.reply;
+
+	console.log(`[${user.username}] - replied to tweet [${tweetId}]`);
+
+	return result;
+};
 
 module.exports = {
-    a_user_signs_up,
-    we_invoke_confirmUserSignup,
-    a_user_calls_getMyProfile,
-    a_user_calls_editMyProfile,
-    a_user_calls_getImageUploadUrl,
-    we_invoke_tweet,
-    a_user_calls_tweet,
-    a_user_calls_getTweets,
-    a_user_calls_getMyTimeline,
-    a_user_calls_like,
-    a_user_calls_unlike,
-    a_user_calls_getLikes,
-    a_user_calls_retweet,
-    we_invoke_reply,
-    we_invoke_retweet
-}
+	a_user_signs_up,
+	we_invoke_confirmUserSignup,
+	a_user_calls_getMyProfile,
+	a_user_calls_editMyProfile,
+	a_user_calls_getImageUploadUrl,
+	we_invoke_tweet,
+	a_user_calls_tweet,
+	a_user_calls_getTweets,
+	a_user_calls_getMyTimeline,
+	a_user_calls_like,
+	a_user_calls_unlike,
+	a_user_calls_getLikes,
+	a_user_calls_retweet,
+	we_invoke_reply,
+	we_invoke_retweet,
+	a_user_calls_reply,
+};

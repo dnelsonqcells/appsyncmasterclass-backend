@@ -1,496 +1,516 @@
 service: appsyncmasterclass-backend
-frameworkVersion: '3'
+frameworkVersion: "3"
 
 plugins:
-  - serverless-appsync-plugin
-  - serverless-iam-roles-per-function
-  - serverless-export-env
-  - serverless-export-outputs
+    - serverless-appsync-plugin
+    - serverless-iam-roles-per-function
+    - serverless-export-env
+    - serverless-export-outputs
 
 provider:
-  name: aws
-  runtime: nodejs20.x
-  region: us-east-1
-  stage: dev
-  environment:
-    STAGE: ${self:custom.stage}
-    AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+    name: aws
+    runtime: nodejs20.x
+    region: us-east-1
+    stage: dev
+    environment:
+        STAGE: ${self:custom.stage}
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
 
 package:
-  exclude:
-    - package-lock.json
-    - package.json
-    - _aws.graphql
+    exclude:
+        - package-lock.json
+        - package.json
+        - _aws.graphql
 
 custom:
-  region: ${opt:region, self:provider.region}
-  stage: ${opt:stage, self:provider.stage}
-  exportOutputs:
-    include:
-      - AwsRegion
-      - CognitoUserPoolId
-      - WebCognitoUserPoolClientId
-    output:
-      file: ./.env-outputs
+    region: ${opt:region, self:provider.region}
+    stage: ${opt:stage, self:provider.stage}
+    exportOutputs:
+        include:
+            - AwsRegion
+            - CognitoUserPoolId
+            - WebCognitoUserPoolClientId
+        output:
+            file: ./.env-outputs
 
 appSync:
-  name: appsyncmasterclass
-  schema: schema.api.graphql
-  authentication:
-    type: 'AMAZON_COGNITO_USER_POOLS'
-    config:
-      awsRegion: us-east-1
-      defaultAction: ALLOW
-      userPoolId: !Ref CognitoUserPool
-  logging:
-    level: ALL
-  resolvers:
-    # Queries
-    Query.getMyProfile:
-      functions:
-        - dataSource: usersTable
-          code: resolvers/getMyProfile.js
-    Query.getTweets:
-      functions:
-        - dataSource: tweetsTable
-          code: resolvers/getTweets.js
-    Query.getImageUploadUrl:
-      functions:
-        - dataSource: getImageUploadUrlFunction
-    Query.getMyTimeline:
-      functions:
-        - dataSource: timelinesTable
-          code: resolvers/getMyTimeline.js
-    Query.getLikes:
-      functions:
-        - dataSource: likesTable
-          code: resolvers/getMyTimeline.js
-    # Mutations
-    Mutation.editMyProfile:
-      functions:
-        - dataSource: usersTable
-          code: resolvers/editMyProfile.js
-    Mutation.tweet:
-      functions:
-        - dataSource: tweetFunction
-    Mutation.retweet:
-      functions:
-        - dataSource: retweetFunction
-    Mutation.like:
-      functions:
-        - dataSource: likesMutation
-          code: resolvers/like.js
-    Mutation.unlike:
-      functions:
-        - dataSource: unlikeMutation
-          code: resolvers/unlike.js
-    Mutation.reply:
-      functions:
-        - dataSource: replyFunction
-    # Nested Fields
-    Tweet.profile:
-      functions:
-        - dataSource: usersTable
-          code: resolvers/Tweet.profile.js
-    Retweet.profile:
-      functions:
-        - dataSource: usersTable
-          code: resolvers/Tweet.profile.js
-    Tweet.liked:
-      functions:
-        - dataSource: likesTable
-          code: resolvers/Tweet.liked.js
-    Tweet.retweeted:
-      functions:
-        - dataSource: retweetsTable
-          code: resolvers/Tweet.retweeted.js
-    Retweet.retweetOf:
-      functions:
-        - dataSource: tweetsTable
-          code: resolvers/Retweet.retweetOf.js
-    UnhydratedTweetsPage.tweets:
-      functions:
-        - dataSource: tweetsTable
-          code:  resolvers/UnhydratedTweetsPage.tweets.js
-    MyProfile.tweets:
-      functions:
-        - dataSource: tweetsTable
-          code:  resolvers/MyProfile.tweets.js
+    name: appsyncmasterclass
+    schema: schema.api.graphql
+    authentication:
+        type: "AMAZON_COGNITO_USER_POOLS"
+        config:
+            awsRegion: us-east-1
+            defaultAction: ALLOW
+            userPoolId: !Ref CognitoUserPool
+    logging:
+        level: ALL
+    resolvers:
+        # Queries
+        Query.getMyProfile:
+            functions:
+                - dataSource: usersTable
+                  code: resolvers/getMyProfile.js
+        Query.getTweets:
+            functions:
+                - dataSource: tweetsTable
+                  code: resolvers/getTweets.js
+        Query.getImageUploadUrl:
+            functions:
+                - dataSource: getImageUploadUrlFunction
+        Query.getMyTimeline:
+            functions:
+                - dataSource: timelinesTable
+                  code: resolvers/getMyTimeline.js
+        Query.getLikes:
+            functions:
+                - dataSource: likesTable
+                  code: resolvers/getMyTimeline.js
+        # Mutations
+        Mutation.editMyProfile:
+            functions:
+                - dataSource: usersTable
+                  code: resolvers/editMyProfile.js
+        Mutation.tweet:
+            functions:
+                - dataSource: tweetFunction
+        Mutation.retweet:
+            functions:
+                - dataSource: retweetFunction
+        Mutation.like:
+            functions:
+                - dataSource: likesMutation
+                  code: resolvers/like.js
+        Mutation.unlike:
+            functions:
+                - dataSource: unlikeMutation
+                  code: resolvers/unlike.js
+        Mutation.reply:
+            functions:
+                - dataSource: replyFunction
+        # Nested Fields
+        Tweet.profile:
+            functions:
+                - dataSource: usersTable
+                  code: resolvers/Tweet.profile.js
+        Retweet.profile:
+            functions:
+                - dataSource: usersTable
+                  code: resolvers/Tweet.profile.js
+        Reply.profile:
+            functions:
+                - dataSource: usersTable
+                  code: resolvers/Tweet.profile.js
+        Tweet.liked:
+            functions:
+                - dataSource: likesTable
+                  code: resolvers/Tweet.liked.js
+        Reply.liked:
+            functions:
+                - dataSource: likesTable
+                  code: resolvers/Tweet.liked.js
+        Tweet.retweeted:
+            functions:
+                - dataSource: retweetsTable
+                  code: resolvers/Tweet.retweeted.js
+        Reply.retweeted:
+            functions:
+                - dataSource: retweetsTable
+                  code: resolvers/Tweet.retweeted.js
+        Retweet.retweetOf:
+            functions:
+                - dataSource: tweetsTable
+                  code: resolvers/Retweet.retweetOf.js
+        Reply.inReplyToTweet:
+            functions:
+                - dataSource: tweetsTable
+                  code: resolvers/Reply.inReplyToTweet.js
+        Reply.inReplyToUsers:
+            functions:
+                - dataSource: usersTable
+                  code: resolvers/Reply.inReplyToUsers.js
+        UnhydratedTweetsPage.tweets:
+            functions:
+                - dataSource: tweetsTable
+                  code: resolvers/UnhydratedTweetsPage.tweets.js
+        MyProfile.tweets:
+            functions:
+                - dataSource: tweetsTable
+                  code: resolvers/MyProfile.tweets.js
 
-  substitutions:
-    TWEETS_TABLE: !Ref TweetsTable
-    LIKES_TABLE: !Ref LikesTable
-    USERS_TABLE: !Ref UsersTable
+    substitutions:
+        TWEETS_TABLE: !Ref TweetsTable
+        LIKES_TABLE: !Ref LikesTable
+        USERS_TABLE: !Ref UsersTable
 
-  dataSources:
-    none:
-      type: NONE
-    usersTable:
-      type: AMAZON_DYNAMODB
-      config:
-        tableName: !Ref UsersTable
-    tweetsTable:
-      type: AMAZON_DYNAMODB
-      config:
-        tableName: !Ref TweetsTable
-    retweetsTable:
-      type: AMAZON_DYNAMODB
-      config:
-        tableName: !Ref RetweetsTable
-    timelinesTable:
-      type: AMAZON_DYNAMODB
-      config:
-        tableName: !Ref TimelinesTable
-    likesTable:
-      type: AMAZON_DYNAMODB
-      config:
-        tableName: !Ref LikesTable
-    likesMutation:
-      type: AMAZON_DYNAMODB
-      config:
-        tableName: !Ref LikesTable
-        iamRoleStatements:
-          - Effect: Allow
-            Action:
-              - dynamodb:PutItem
-            Resource: !GetAtt LikesTable.Arn
-          - Effect: Allow
-            Action:
-              - dynamodb:UpdateItem
-            Resource:
-              - !GetAtt UsersTable.Arn
-              - !GetAtt TweetsTable.Arn
-    unlikeMutation:
-      type: AMAZON_DYNAMODB
-      config:
-        tableName: !Ref LikesTable
-        iamRoleStatements:
-          - Effect: Allow
-            Action:
-              - dynamodb:DeleteItem
-            Resource: !GetAtt LikesTable.Arn
-          - Effect: Allow
-            Action:
-              - dynamodb:UpdateItem
-            Resource:
-              - !GetAtt UsersTable.Arn
-              - !GetAtt TweetsTable.Arn
-    getImageUploadUrlFunction:
-      type: AWS_LAMBDA
-      config:
-        functionName: getImageUploadUrl
-    tweetFunction:
-      type: AWS_LAMBDA
-      config:
-        functionName: tweet
-    retweetFunction:
-      type: AWS_LAMBDA
-      config:
-        functionName: retweet
-    unretweetFunction:
-      type: AWS_LAMBDA
-      config:
-        functionName: unretweet
-    replyFunction:
-      type: AWS_LAMBDA
-      config:
-        functionName: reply
+    dataSources:
+        none:
+            type: NONE
+        usersTable:
+            type: AMAZON_DYNAMODB
+            config:
+                tableName: !Ref UsersTable
+        tweetsTable:
+            type: AMAZON_DYNAMODB
+            config:
+                tableName: !Ref TweetsTable
+        retweetsTable:
+            type: AMAZON_DYNAMODB
+            config:
+                tableName: !Ref RetweetsTable
+        timelinesTable:
+            type: AMAZON_DYNAMODB
+            config:
+                tableName: !Ref TimelinesTable
+        likesTable:
+            type: AMAZON_DYNAMODB
+            config:
+                tableName: !Ref LikesTable
+        likesMutation:
+            type: AMAZON_DYNAMODB
+            config:
+                tableName: !Ref LikesTable
+                iamRoleStatements:
+                    - Effect: Allow
+                      Action:
+                          - dynamodb:PutItem
+                      Resource: !GetAtt LikesTable.Arn
+                    - Effect: Allow
+                      Action:
+                          - dynamodb:UpdateItem
+                      Resource:
+                          - !GetAtt UsersTable.Arn
+                          - !GetAtt TweetsTable.Arn
+        unlikeMutation:
+            type: AMAZON_DYNAMODB
+            config:
+                tableName: !Ref LikesTable
+                iamRoleStatements:
+                    - Effect: Allow
+                      Action:
+                          - dynamodb:DeleteItem
+                      Resource: !GetAtt LikesTable.Arn
+                    - Effect: Allow
+                      Action:
+                          - dynamodb:UpdateItem
+                      Resource:
+                          - !GetAtt UsersTable.Arn
+                          - !GetAtt TweetsTable.Arn
+        getImageUploadUrlFunction:
+            type: AWS_LAMBDA
+            config:
+                functionName: getImageUploadUrl
+        tweetFunction:
+            type: AWS_LAMBDA
+            config:
+                functionName: tweet
+        retweetFunction:
+            type: AWS_LAMBDA
+            config:
+                functionName: retweet
+        unretweetFunction:
+            type: AWS_LAMBDA
+            config:
+                functionName: unretweet
+        replyFunction:
+            type: AWS_LAMBDA
+            config:
+                functionName: reply
 
 functions:
-  confirmUserSignup:
-    handler: functions/confirm-user-signup.handler
-    environment:
-      USERS_TABLE: !Ref UsersTable
-    iamRoleStatements:
-      - Effect: Allow
-        Action: dynamodb:PutItem
-        Resource: !GetAtt UsersTable.Arn
+    confirmUserSignup:
+        handler: functions/confirm-user-signup.handler
+        environment:
+            USERS_TABLE: !Ref UsersTable
+        iamRoleStatements:
+            - Effect: Allow
+              Action: dynamodb:PutItem
+              Resource: !GetAtt UsersTable.Arn
 
-  getImageUploadUrl:
-    handler: functions/get-upload-url.handler
-    environment:
-      BUCKET_NAME: !Ref AssetsBucket
-    iamRoleStatements:
-      - Effect: Allow
-        Action:
-          - s3:PutObject
-          - s3:PutObjectAcl
-        Resource: !Sub ${AssetsBucket.Arn}/*
+    getImageUploadUrl:
+        handler: functions/get-upload-url.handler
+        environment:
+            BUCKET_NAME: !Ref AssetsBucket
+        iamRoleStatements:
+            - Effect: Allow
+              Action:
+                  - s3:PutObject
+                  - s3:PutObjectAcl
+              Resource: !Sub ${AssetsBucket.Arn}/*
 
-  tweet:
-    handler: functions/tweet.handler
-    environment:
-      USERS_TABLE: !Ref UsersTable
-      TWEETS_TABLE: !Ref TweetsTable
-      TIMELINES_TABLE: !Ref TimelinesTable
-    iamRoleStatements:
-      - Effect: Allow
-        Action: dynamodb:UpdateItem
-        Resource: !GetAtt UsersTable.Arn
-      - Effect: Allow
-        Action: dynamodb:PutItem
-        Resource:
-          - !GetAtt TweetsTable.Arn
-          - !GetAtt TimelinesTable.Arn
+    tweet:
+        handler: functions/tweet.handler
+        environment:
+            USERS_TABLE: !Ref UsersTable
+            TWEETS_TABLE: !Ref TweetsTable
+            TIMELINES_TABLE: !Ref TimelinesTable
+        iamRoleStatements:
+            - Effect: Allow
+              Action: dynamodb:UpdateItem
+              Resource: !GetAtt UsersTable.Arn
+            - Effect: Allow
+              Action: dynamodb:PutItem
+              Resource:
+                  - !GetAtt TweetsTable.Arn
+                  - !GetAtt TimelinesTable.Arn
 
-  retweet:
-    handler: functions/retweet.handler
-    environment:
-      USERS_TABLE: !Ref UsersTable
-      TWEETS_TABLE: !Ref TweetsTable
-      TIMELINES_TABLE: !Ref TimelinesTable
-      RETWEETS_TABLE: !Ref RetweetsTable
-    iamRoleStatements:
-      - Effect: Allow
-        Action: dynamodb:GetItem
-        Resource: !GetAtt TweetsTable.Arn
-      - Effect: Allow
-        Action: dynamodb:UpdateItem
-        Resource:
-          - !GetAtt TweetsTable.Arn
-          - !GetAtt UsersTable.Arn
-      - Effect: Allow
-        Action: dynamodb:PutItem
-        Resource:
-          - !GetAtt TweetsTable.Arn
-          - !GetAtt TimelinesTable.Arn
-          - !GetAtt RetweetsTable.Arn
+    retweet:
+        handler: functions/retweet.handler
+        environment:
+            USERS_TABLE: !Ref UsersTable
+            TWEETS_TABLE: !Ref TweetsTable
+            TIMELINES_TABLE: !Ref TimelinesTable
+            RETWEETS_TABLE: !Ref RetweetsTable
+        iamRoleStatements:
+            - Effect: Allow
+              Action: dynamodb:GetItem
+              Resource: !GetAtt TweetsTable.Arn
+            - Effect: Allow
+              Action: dynamodb:UpdateItem
+              Resource:
+                  - !GetAtt TweetsTable.Arn
+                  - !GetAtt UsersTable.Arn
+            - Effect: Allow
+              Action: dynamodb:PutItem
+              Resource:
+                  - !GetAtt TweetsTable.Arn
+                  - !GetAtt TimelinesTable.Arn
+                  - !GetAtt RetweetsTable.Arn
 
-  unretweet:
-    handler: functions/unretweet.handler
-    environment:
-      USERS_TABLE: !Ref UsersTable
-      TWEETS_TABLE: !Ref TweetsTable
-      TIMELINES_TABLE: !Ref TimelinesTable
-      RETWEETS_TABLE: !Ref RetweetsTable
-    iamRoleStatements:
-      - Effect: Allow
-        Action: dynamodb:GetItem
-        Resource: !GetAtt TweetsTable.Arn
-      - Effect: Allow
-        Action: dynamodb:Query
-        Resource: !Sub "${TweetsTable.Arn}/index/retweetsByCreator"
-      - Effect: Allow
-        Action: dynamodb:UpdateItem
-        Resource:
-          - !GetAtt TweetsTable.Arn
-          - !GetAtt UsersTable.Arn
-      - Effect: Allow
-        Action: dynamodb:DeleteItem
-        Resource:
-          - !GetAtt TweetsTable.Arn
-          - !GetAtt TimelinesTable.Arn
-          - !GetAtt RetweetsTable.Arn
+    unretweet:
+        handler: functions/unretweet.handler
+        environment:
+            USERS_TABLE: !Ref UsersTable
+            TWEETS_TABLE: !Ref TweetsTable
+            TIMELINES_TABLE: !Ref TimelinesTable
+            RETWEETS_TABLE: !Ref RetweetsTable
+        iamRoleStatements:
+            - Effect: Allow
+              Action: dynamodb:GetItem
+              Resource: !GetAtt TweetsTable.Arn
+            - Effect: Allow
+              Action: dynamodb:Query
+              Resource: !Sub "${TweetsTable.Arn}/index/retweetsByCreator"
+            - Effect: Allow
+              Action: dynamodb:UpdateItem
+              Resource:
+                  - !GetAtt TweetsTable.Arn
+                  - !GetAtt UsersTable.Arn
+            - Effect: Allow
+              Action: dynamodb:DeleteItem
+              Resource:
+                  - !GetAtt TweetsTable.Arn
+                  - !GetAtt TimelinesTable.Arn
+                  - !GetAtt RetweetsTable.Arn
 
-  reply:
-    handler: functions/reply.handler
-    environment:
-      USERS_TABLE: !Ref UsersTable
-      TWEETS_TABLE: !Ref TweetsTable
-      TIMELINES_TABLE: !Ref TimelinesTable
-    iamRoleStatements:
-      - Effect: Allow
-        Action: dynamodb:GetItem
-        Resource: !GetAtt TweetsTable.Arn
-      - Effect: Allow
-        Action: dynamodb:UpdateItem
-        Resource:
-          - !GetAtt TweetsTable.Arn
-          - !GetAtt UsersTable.Arn
-      - Effect: Allow
-        Action: dynamodb:DeleteItem
-        Resource:
-          - !GetAtt TweetsTable.Arn
-          - !GetAtt TimelinesTable.Arn
+    reply:
+        handler: functions/reply.handler
+        environment:
+            USERS_TABLE: !Ref UsersTable
+            TWEETS_TABLE: !Ref TweetsTable
+            TIMELINES_TABLE: !Ref TimelinesTable
+        iamRoleStatements:
+            - Effect: Allow
+              Action: dynamodb:GetItem
+              Resource: !GetAtt TweetsTable.Arn
+            - Effect: Allow
+              Action: dynamodb:UpdateItem
+              Resource:
+                  - !GetAtt TweetsTable.Arn
+                  - !GetAtt UsersTable.Arn
+            - Effect: Allow
+              Action: dynamodb:PutItem
+              Resource:
+                  - !GetAtt TweetsTable.Arn
+                  - !GetAtt TimelinesTable.Arn
 
 resources:
-  Resources:
-    UsersTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        BillingMode: PAY_PER_REQUEST
-        KeySchema:
-          - AttributeName: id
-            KeyType: HASH
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        Tags:
-          - Key: Environment
-            Value: ${self:custom.stage}
-          - Key: Name
-            Value: users-table
+    Resources:
+        UsersTable:
+            Type: AWS::DynamoDB::Table
+            Properties:
+                BillingMode: PAY_PER_REQUEST
+                KeySchema:
+                    - AttributeName: id
+                      KeyType: HASH
+                AttributeDefinitions:
+                    - AttributeName: id
+                      AttributeType: S
+                Tags:
+                    - Key: Environment
+                      Value: ${self:custom.stage}
+                    - Key: Name
+                      Value: users-table
 
-    TweetsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        BillingMode: PAY_PER_REQUEST
-        KeySchema:
-          - AttributeName: id
-            KeyType: HASH
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-          - AttributeName: creator
-            AttributeType: S
-          - AttributeName: retweetOf
-            AttributeType: S
-          - AttributeName: inReplyToTweetId
-            AttributeType: S
-        GlobalSecondaryIndexes:
-          - IndexName: byCreator
-            KeySchema:
-              - AttributeName: creator
-                KeyType: HASH
-              - AttributeName: id
-                KeyType: RANGE
-            Projection:
-              ProjectionType: ALL
-          - IndexName: retweetsByCreator
-            KeySchema:
-              - AttributeName: creator
-                KeyType: HASH
-              - AttributeName: retweetOf
-                KeyType: RANGE
-            Projection:
-              ProjectionType: ALL
-          - IndexName: repliesForTweet
-            KeySchema:
-              - AttributeName: inReplyToTweetId
-                KeyType: HASH
-              - AttributeName: id
-                KeyType: RANGE
-            Projection:
-              ProjectionType: ALL
-        Tags:
-          - Key: Environment
-            Value: ${self:custom.stage}
-          - Key: Name
-            Value: tweets-table
+        TweetsTable:
+            Type: AWS::DynamoDB::Table
+            Properties:
+                BillingMode: PAY_PER_REQUEST
+                KeySchema:
+                    - AttributeName: id
+                      KeyType: HASH
+                AttributeDefinitions:
+                    - AttributeName: id
+                      AttributeType: S
+                    - AttributeName: creator
+                      AttributeType: S
+                    - AttributeName: retweetOf
+                      AttributeType: S
+                    - AttributeName: inReplyToTweetId
+                      AttributeType: S
+                GlobalSecondaryIndexes:
+                    - IndexName: byCreator
+                      KeySchema:
+                          - AttributeName: creator
+                            KeyType: HASH
+                          - AttributeName: id
+                            KeyType: RANGE
+                      Projection:
+                          ProjectionType: ALL
+                    - IndexName: retweetsByCreator
+                      KeySchema:
+                          - AttributeName: creator
+                            KeyType: HASH
+                          - AttributeName: retweetOf
+                            KeyType: RANGE
+                      Projection:
+                          ProjectionType: ALL
+                    - IndexName: repliesForTweet
+                      KeySchema:
+                          - AttributeName: inReplyToTweetId
+                            KeyType: HASH
+                          - AttributeName: id
+                            KeyType: RANGE
+                      Projection:
+                          ProjectionType: ALL
+                Tags:
+                    - Key: Environment
+                      Value: ${self:custom.stage}
+                    - Key: Name
+                      Value: tweets-table
 
-    LikesTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        BillingMode: PAY_PER_REQUEST
-        KeySchema:
-          - AttributeName: userId
-            KeyType: HASH
-          - AttributeName: tweetId
-            KeyType: RANGE
-        AttributeDefinitions:
-          - AttributeName: userId
-            AttributeType: S
-          - AttributeName: tweetId
-            AttributeType: S
-        Tags:
-          - Key: Environment
-            Value: ${self:custom.stage}
-          - Key: Name
-            Value: likes-table
+        LikesTable:
+            Type: AWS::DynamoDB::Table
+            Properties:
+                BillingMode: PAY_PER_REQUEST
+                KeySchema:
+                    - AttributeName: userId
+                      KeyType: HASH
+                    - AttributeName: tweetId
+                      KeyType: RANGE
+                AttributeDefinitions:
+                    - AttributeName: userId
+                      AttributeType: S
+                    - AttributeName: tweetId
+                      AttributeType: S
+                Tags:
+                    - Key: Environment
+                      Value: ${self:custom.stage}
+                    - Key: Name
+                      Value: likes-table
 
-    RetweetsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        BillingMode: PAY_PER_REQUEST
-        KeySchema:
-          - AttributeName: userId
-            KeyType: HASH
-          - AttributeName: tweetId
-            KeyType: RANGE
-        AttributeDefinitions:
-          - AttributeName: userId
-            AttributeType: S
-          - AttributeName: tweetId
-            AttributeType: S
-        Tags:
-          - Key: Environment
-            Value: ${self:custom.stage}
-          - Key: Name
-            Value: retweets-table
+        RetweetsTable:
+            Type: AWS::DynamoDB::Table
+            Properties:
+                BillingMode: PAY_PER_REQUEST
+                KeySchema:
+                    - AttributeName: userId
+                      KeyType: HASH
+                    - AttributeName: tweetId
+                      KeyType: RANGE
+                AttributeDefinitions:
+                    - AttributeName: userId
+                      AttributeType: S
+                    - AttributeName: tweetId
+                      AttributeType: S
+                Tags:
+                    - Key: Environment
+                      Value: ${self:custom.stage}
+                    - Key: Name
+                      Value: retweets-table
 
-    TimelinesTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        BillingMode: PAY_PER_REQUEST
-        KeySchema:
-          - AttributeName: userId
-            KeyType: HASH
-          - AttributeName: tweetId
-            KeyType: RANGE
-        AttributeDefinitions:
-          - AttributeName: userId
-            AttributeType: S
-          - AttributeName: tweetId
-            AttributeType: S
-        Tags:
-          - Key: Environment
-            Value: ${self:custom.stage}
-          - Key: Name
-            Value: timelines-table
+        TimelinesTable:
+            Type: AWS::DynamoDB::Table
+            Properties:
+                BillingMode: PAY_PER_REQUEST
+                KeySchema:
+                    - AttributeName: userId
+                      KeyType: HASH
+                    - AttributeName: tweetId
+                      KeyType: RANGE
+                AttributeDefinitions:
+                    - AttributeName: userId
+                      AttributeType: S
+                    - AttributeName: tweetId
+                      AttributeType: S
+                Tags:
+                    - Key: Environment
+                      Value: ${self:custom.stage}
+                    - Key: Name
+                      Value: timelines-table
 
-    CognitoUserPool:
-      Type: AWS::Cognito::UserPool
-      Properties:
-        AutoVerifiedAttributes:
-          - email
-        Policies:
-          PasswordPolicy:
-            MinimumLength: 8
-            RequireLowercase: false
-            RequireNumbers: false
-            RequireUppercase: false
-            RequireSymbols: false
-        UsernameAttributes:
-          - email
-        Schema:
-          - AttributeDataType: String
-            Name: name
-            Required: false
-            Mutable: true
-        LambdaConfig:
-          PostConfirmation: !GetAtt ConfirmUserSignupLambdaFunction.Arn
+        CognitoUserPool:
+            Type: AWS::Cognito::UserPool
+            Properties:
+                AutoVerifiedAttributes:
+                    - email
+                Policies:
+                    PasswordPolicy:
+                        MinimumLength: 8
+                        RequireLowercase: false
+                        RequireNumbers: false
+                        RequireUppercase: false
+                        RequireSymbols: false
+                UsernameAttributes:
+                    - email
+                Schema:
+                    - AttributeDataType: String
+                      Name: name
+                      Required: false
+                      Mutable: true
+                LambdaConfig:
+                    PostConfirmation: !GetAtt ConfirmUserSignupLambdaFunction.Arn
 
-    UserPoolInvokeConfirmUserSignupLambdaPermission:
-      Type: AWS::Lambda::Permission
-      Properties:
-        Action: lambda:invokeFunction
-        FunctionName: !Ref ConfirmUserSignupLambdaFunction
-        Principal: cognito-idp.amazonaws.com
-        SourceArn: !GetAtt CognitoUserPool.Arn
+        UserPoolInvokeConfirmUserSignupLambdaPermission:
+            Type: AWS::Lambda::Permission
+            Properties:
+                Action: lambda:invokeFunction
+                FunctionName: !Ref ConfirmUserSignupLambdaFunction
+                Principal: cognito-idp.amazonaws.com
+                SourceArn: !GetAtt CognitoUserPool.Arn
 
-    WebUserPoolClient:
-      Type: AWS::Cognito::UserPoolClient
-      Properties:
-        UserPoolId: !Ref CognitoUserPool
-        ClientName: web
-        ExplicitAuthFlows:
-          - ALLOW_USER_SRP_AUTH
-          - ALLOW_USER_PASSWORD_AUTH
-          - ALLOW_REFRESH_TOKEN_AUTH
-        PreventUserExistenceErrors: ENABLED
+        WebUserPoolClient:
+            Type: AWS::Cognito::UserPoolClient
+            Properties:
+                UserPoolId: !Ref CognitoUserPool
+                ClientName: web
+                ExplicitAuthFlows:
+                    - ALLOW_USER_SRP_AUTH
+                    - ALLOW_USER_PASSWORD_AUTH
+                    - ALLOW_REFRESH_TOKEN_AUTH
+                PreventUserExistenceErrors: ENABLED
 
-    AssetsBucket:
-      Type: AWS::S3::Bucket
-      Properties:
-        AccelerateConfiguration:
-          AccelerationStatus: Enabled
-        CorsConfiguration:
-          CorsRules:
-            - AllowedMethods:
-                - GET
-                - PUT
-              AllowedOrigins:
-                - '*'
-              AllowedHeaders:
-                - '*'
-        OwnershipControls:
-          Rules:
-            - ObjectOwnership: ObjectWriter
+        AssetsBucket:
+            Type: AWS::S3::Bucket
+            Properties:
+                AccelerateConfiguration:
+                    AccelerationStatus: Enabled
+                CorsConfiguration:
+                    CorsRules:
+                        - AllowedMethods:
+                              - GET
+                              - PUT
+                          AllowedOrigins:
+                              - "*"
+                          AllowedHeaders:
+                              - "*"
+                OwnershipControls:
+                    Rules:
+                        - ObjectOwnership: ObjectWriter
 
-  Outputs:
-    AwsRegion:
-      Value: ${self:custom.region}
-    CognitoUserPoolId:
-      Value: !Ref CognitoUserPool
-    WebCognitoUserPoolClientId:
-      Value: !Ref WebUserPoolClient
+    Outputs:
+        AwsRegion:
+            Value: ${self:custom.region}
+        CognitoUserPoolId:
+            Value: !Ref CognitoUserPool
+        WebCognitoUserPoolClientId:
+            Value: !Ref WebUserPoolClient
