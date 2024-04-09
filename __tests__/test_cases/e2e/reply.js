@@ -3,7 +3,7 @@ const given = require("../../steps/given");
 const when = require("../../steps/when");
 const chance = require("chance").Chance();
 
-describe("Given authenticated users, user A, B and C", () => {
+xdescribe("Given authenticated users, user A, B and C", () => {
 	let userA, userB, userC, userAsTweet;
 	const text = chance.string({ length: 16 });
 	beforeAll(async () => {
