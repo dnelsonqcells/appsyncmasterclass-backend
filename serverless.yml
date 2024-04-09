@@ -377,6 +377,30 @@ functions:
               Action: dynamodb:Query
               Resource: !Sub "${RelationshipsTable.Arn}/index/byOtherUser"
 
+    distributeTweetsToFollower:
+        handler: functions/distribute-tweets-to-follower.handler
+        environment:
+            TWEETS_TABLE: !Ref TweetsTable
+            TIMELINES_TABLE: !Ref TimelinesTable
+            MAX_TWEETS: 100
+        events:
+            - stream:
+                  type: dynamodb
+                  arn: !GetAtt RelationshipsTable.StreamArn
+        iamRoleStatementsName: ${self:service}-${self:custom.stage}-distributeTweetsToFollower
+        iamRoleStatements:
+            - Effect: Allow
+              Action:
+                  - dynamodb:PutItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:BatchWriteItem
+              Resource: !GetAtt TimelinesTable.Arn
+            - Effect: Allow
+              Action: dynamodb:Query
+              Resource:
+                  - !Sub "${TweetsTable.Arn}/index/byCreator"
+                  - !Sub "${TimelinesTable.Arn}/index/byDistributedFrom"
+
 resources:
     Resources:
         UsersTable:
@@ -518,6 +542,8 @@ resources:
                             KeyType: RANGE
                       Projection:
                           ProjectionType: ALL
+                StreamSpecification:
+                    StreamViewType: NEW_AND_OLD_IMAGES
                 Tags:
                     - Key: Environment
                       Value: ${self:custom.stage}
@@ -538,6 +564,17 @@ resources:
                       AttributeType: S
                     - AttributeName: tweetId
                       AttributeType: S
+                    - AttributeName: distributedFrom
+                      AttributeType: S
+                GlobalSecondaryIndexes:
+                    - IndexName: byDistributedFrom
+                      KeySchema:
+                          - AttributeName: userId
+                            KeyType: HASH
+                          - AttributeName: distributedFrom
+                            KeyType: RANGE
+                      Projection:
+                          ProjectionType: ALL
                 Tags:
                     - Key: Environment
                       Value: ${self:custom.stage}

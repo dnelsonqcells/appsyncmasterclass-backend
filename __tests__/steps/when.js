@@ -610,6 +610,14 @@ const we_invoke_distributeTweets = async (event) => {
 	return await handler(event, context);
 };
 
+const we_invoke_distributeTweetsToFollower = async (event) => {
+	const handler =
+		require("../../functions/distribute-tweets-to-follower").handler;
+
+	const context = {};
+	return await handler(event, context);
+};
+
 module.exports = {
 	a_user_signs_up,
 	we_invoke_confirmUserSignup,
@@ -630,4 +638,5 @@ module.exports = {
 	a_user_calls_follow,
 	a_user_calls_getProfile,
 	we_invoke_distributeTweets,
+	we_invoke_distributeTweetsToFollower,
 };
