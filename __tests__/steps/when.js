@@ -603,6 +603,13 @@ const a_user_calls_getProfile = async (user, screenName) => {
 	return profile;
 };
 
+const we_invoke_distributeTweets = async (event) => {
+	const handler = require("../../functions/distribute-tweets").handler;
+
+	const context = {};
+	return await handler(event, context);
+};
+
 module.exports = {
 	a_user_signs_up,
 	we_invoke_confirmUserSignup,
@@ -622,4 +629,5 @@ module.exports = {
 	a_user_calls_reply,
 	a_user_calls_follow,
 	a_user_calls_getProfile,
+	we_invoke_distributeTweets,
 };
