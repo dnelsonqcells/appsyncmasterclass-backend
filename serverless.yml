@@ -101,6 +101,9 @@ appSync:
         Mutation.retweet:
             functions:
                 - dataSource: retweetFunction
+        Mutation.unretweet:
+            functions:
+                - dataSource: unretweetFunction
         Mutation.like:
             functions:
                 - dataSource: likesMutation
