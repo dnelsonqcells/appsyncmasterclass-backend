@@ -3,7 +3,7 @@ const given = require("../../steps/given");
 const when = require("../../steps/when");
 const chance = require("chance").Chance();
 
-xdescribe("Given an authenticated user", () => {
+describe("Given an authenticated user", () => {
 	let userA;
 	beforeAll(async () => {
 		userA = await given.an_authenticated_user();

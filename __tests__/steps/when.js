@@ -37,8 +37,8 @@ fragment otherProfileFields on OtherProfile {
   followingCount
   tweetsCount
   likesCounts
-  # following
-  # followedBy
+  following
+  followedBy
 }
 `;
 
@@ -618,6 +618,102 @@ const we_invoke_distributeTweetsToFollower = async (event) => {
 	return await handler(event, context);
 };
 
+const a_user_calls_getFollowers = async (user, userId, limit, nextToken) => {
+	const getFollowers = `query getFollowers($userId: ID!, $limit: Int!, $nextToken: String) {
+	  getFollowers(userId: $userId, limit: $limit, nextToken: $nextToken) {
+		profiles {
+		  ... iProfileFields
+		}
+	  }
+	}`;
+	const variables = {
+		userId,
+		limit,
+		nextToken,
+	};
+
+	const data = await GraphQL(
+		process.env.API_URL,
+		getFollowers,
+		variables,
+		user.accessToken,
+	);
+	const result = data.getFollowers;
+
+	console.log(`[${user.username}] - fetched followers`);
+
+	return result;
+};
+
+const a_user_calls_unfollow = async (user, userId) => {
+	const unfollow = `mutation unfollow($userId: ID!) {
+	  unfollow(userId: $userId)
+	}`;
+	const variables = {
+		userId,
+	};
+
+	const data = await GraphQL(
+		process.env.API_URL,
+		unfollow,
+		variables,
+		user.accessToken,
+	);
+	const result = data.unfollow;
+
+	console.log(`[${user.username}] - unfollowed [${userId}]`);
+
+	return result;
+};
+
+const a_user_calls_getFollowing = async (user, userId, limit, nextToken) => {
+	const getFollowing = `query getFollowing($userId: ID!, $limit: Int!, $nextToken: String) {
+	  getFollowing(userId: $userId, limit: $limit, nextToken: $nextToken) {
+		profiles {
+		  ... iProfileFields
+		}
+	  }
+	}`;
+	const variables = {
+		userId,
+		limit,
+		nextToken,
+	};
+
+	const data = await GraphQL(
+		process.env.API_URL,
+		getFollowing,
+		variables,
+		user.accessToken,
+	);
+	const result = data.getFollowing;
+
+	console.log(`[${user.username}] - fetched following`);
+
+	return result;
+};
+
+const a_user_calls_unretweet = async (user, tweetId) => {
+	const unretweet = `mutation unretweet($tweetId: ID!) {
+	  unretweet(tweetId: $tweetId)
+	}`;
+	const variables = {
+		tweetId,
+	};
+
+	const data = await GraphQL(
+		process.env.API_URL,
+		unretweet,
+		variables,
+		user.accessToken,
+	);
+	const result = data.unretweet;
+
+	console.log(`[${user.username}] - unretweeted tweet [${tweetId}]`);
+
+	return result;
+};
+
 module.exports = {
 	a_user_signs_up,
 	we_invoke_confirmUserSignup,
@@ -639,4 +735,8 @@ module.exports = {
 	a_user_calls_getProfile,
 	we_invoke_distributeTweets,
 	we_invoke_distributeTweetsToFollower,
+	a_user_calls_getFollowers,
+	a_user_calls_unfollow,
+	a_user_calls_getFollowing,
+	a_user_calls_unretweet,
 };

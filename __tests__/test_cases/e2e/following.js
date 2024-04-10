@@ -2,15 +2,18 @@ require("../../steps/init");
 const given = require("../../steps/given");
 const when = require("../../steps/when");
 const chance = require("chance").Chance();
-// const retry = require("async-retry");
+const retry = require("async-retry");
 
-describe("Given authenticated users, user A and B", () => {
+xdescribe("Given authenticated users, user A and B", () => {
 	let userA, userB, userAsProfile, userBsProfile;
+	let userBsTweet1, userBsTweet2;
 	beforeAll(async () => {
 		userA = await given.an_authenticated_user();
 		userB = await given.an_authenticated_user();
 		userAsProfile = await when.a_user_calls_getMyProfile(userA);
 		userBsProfile = await when.a_user_calls_getMyProfile(userB);
+		userBsTweet1 = await when.a_user_calls_tweet(userB, chance.paragraph());
+		userBsTweet2 = await when.a_user_calls_tweet(userB, chance.paragraph());
 	});
 
 	describe("When user A follows user B", () => {
@@ -40,7 +43,7 @@ describe("Given authenticated users, user A and B", () => {
 			expect(followedBy).toBe(true);
 		});
 
-		xit("User A should see himself in user B's list of followers", async () => {
+		it("User A should see himself in user B's list of followers", async () => {
 			const { profiles } = await when.a_user_calls_getFollowers(
 				userA,
 				userB.username,
@@ -55,7 +58,7 @@ describe("Given authenticated users, user A and B", () => {
 			expect(profiles[0]).not.toHaveProperty("followedBy");
 		});
 
-		xit("User A should see user B in his list of following", async () => {
+		it("User A should see user B in his list of following", async () => {
 			const { profiles } = await when.a_user_calls_getFollowing(
 				userA,
 				userA.username,
@@ -70,7 +73,7 @@ describe("Given authenticated users, user A and B", () => {
 			});
 		});
 
-		xit("User B should see user A in his list of followers", async () => {
+		it("User B should see user A in his list of followers", async () => {
 			const { profiles } = await when.a_user_calls_getFollowers(
 				userB,
 				userB.username,
@@ -85,7 +88,7 @@ describe("Given authenticated users, user A and B", () => {
 			});
 		});
 
-		xit("User B should not see user A in his list of following", async () => {
+		it("User B should not see user A in his list of following", async () => {
 			const { profiles } = await when.a_user_calls_getFollowing(
 				userB,
 				userB.username,
@@ -95,7 +98,7 @@ describe("Given authenticated users, user A and B", () => {
 			expect(profiles).toHaveLength(0);
 		});
 
-		xit("Adds user B's tweets to user A's timeline", async () => {
+		it("Adds user B's tweets to user A's timeline", async () => {
 			retry(
 				async () => {
 					const { tweets } = await when.a_user_calls_getMyTimeline(
@@ -120,7 +123,7 @@ describe("Given authenticated users, user A and B", () => {
 			);
 		});
 
-		xdescribe("User B sends a tweet", () => {
+		describe("User B sends a tweet", () => {
 			let tweet;
 			const text = chance.string({ length: 16 });
 			beforeAll(async () => {
@@ -172,7 +175,7 @@ describe("Given authenticated users, user A and B", () => {
 			expect(followedBy).toBe(true);
 		});
 
-		xdescribe("User A sends a tweet", () => {
+		describe("User A sends a tweet", () => {
 			let tweet;
 			const text = chance.string({ length: 16 });
 			beforeAll(async () => {
@@ -197,7 +200,7 @@ describe("Given authenticated users, user A and B", () => {
 		});
 	});
 
-	xdescribe("When user A unfollows user B", () => {
+	describe("When user A unfollows user B", () => {
 		beforeAll(async () => {
 			await when.a_user_calls_unfollow(userA, userB.username);
 		});

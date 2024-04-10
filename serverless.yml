@@ -43,6 +43,20 @@ appSync:
             userPoolId: !Ref CognitoUserPool
     logging:
         level: ALL
+    pipelineFunctions:
+        getFollowers:
+            dataSource: relationshipsTable
+            code: resolvers/getFollowers.js
+        hydrateFollowers:
+            dataSource: usersTable
+            code: resolvers/hydrateFollowers.js
+        getFollowing:
+            dataSource: relationshipsTable
+            code: resolvers/getFollowing.js
+        hydrateFollowing:
+            dataSource: usersTable
+            code: resolvers/hydrateFollowing.js
+
     resolvers:
         # Queries
         Query.getMyProfile:
@@ -53,6 +67,14 @@ appSync:
             functions:
                 - dataSource: usersTable
                   code: resolvers/getProfile.js
+        Query.getFollowers:
+            functions:
+                - getFollowers
+                - hydrateFollowers
+        Query.getFollowing:
+            functions:
+                - getFollowing
+                - hydrateFollowing
         Query.getTweets:
             functions:
                 - dataSource: tweetsTable
@@ -94,6 +116,10 @@ appSync:
             functions:
                 - dataSource: followMutation
                   code: resolvers/follow.js
+        Mutation.unfollow:
+            functions:
+                - dataSource: unfollowMutation
+                  code: resolvers/unfollow.js
         # Nested Fields
         Tweet.profile:
             functions:
@@ -140,6 +166,10 @@ appSync:
                 - dataSource: tweetsTable
                   code: resolvers/UnhydratedTweetsPage.tweets.js
         MyProfile.tweets:
+            functions:
+                - dataSource: tweetsTable
+                  code: resolvers/MyProfile.tweets.js
+        OtherProfile.tweets:
             functions:
                 - dataSource: tweetsTable
                   code: resolvers/MyProfile.tweets.js
@@ -208,6 +238,20 @@ appSync:
                     - Effect: Allow
                       Action:
                           - dynamodb:PutItem
+                      Resource: !GetAtt RelationshipsTable.Arn
+                    - Effect: Allow
+                      Action:
+                          - dynamodb:UpdateItem
+                      Resource:
+                          - !GetAtt UsersTable.Arn
+        unfollowMutation:
+            type: AMAZON_DYNAMODB
+            config:
+                tableName: !Ref RelationshipsTable
+                iamRoleStatements:
+                    - Effect: Allow
+                      Action:
+                          - dynamodb:DeleteItem
                       Resource: !GetAtt RelationshipsTable.Arn
                     - Effect: Allow
                       Action:
