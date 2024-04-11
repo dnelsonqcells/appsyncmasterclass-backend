@@ -90,6 +90,12 @@ appSync:
             functions:
                 - dataSource: likesTable
                   code: resolvers/getMyTimeline.js
+        Query.search:
+            functions:
+                - dataSource: searchFunction
+        Query.getHashTag:
+            functions:
+                - dataSource: getHashTagFunction
         # Mutations
         Mutation.editMyProfile:
             functions:
@@ -296,6 +302,14 @@ appSync:
             type: AWS_LAMBDA
             config:
                 functionName: reply
+        searchFunction:
+            type: AWS_LAMBDA
+            config:
+                functionName: search
+        getHashTagFunction:
+            type: AWS_LAMBDA
+            config:
+                functionName: getHashTag
 
 functions:
     confirmUserSignup:
@@ -448,6 +462,50 @@ functions:
                   - !Sub "${TweetsTable.Arn}/index/byCreator"
                   - !Sub "${TimelinesTable.Arn}/index/byDistributedFrom"
 
+    syncUsersToAlgolia:
+        handler: functions/sync-users-to-algolia.handler
+        events:
+            - stream:
+                  type: dynamodb
+                  arn: !GetAtt UsersTable.StreamArn
+        iamRoleStatements:
+            - Effect: Allow
+              Action: ssm:GetParameters
+              Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${self:custom.stage}/algolia-app-id
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${self:custom.stage}/algolia-admin-key
+
+    syncTweetsToAlgolia:
+        handler: functions/sync-tweets-to-algolia.handler
+        events:
+            - stream:
+                  type: dynamodb
+                  arn: !GetAtt TweetsTable.StreamArn
+        iamRoleStatements:
+            - Effect: Allow
+              Action: ssm:GetParameters
+              Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${self:custom.stage}/algolia-app-id
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${self:custom.stage}/algolia-admin-key
+
+    search:
+        handler: functions/search.handler
+        iamRoleStatements:
+            - Effect: Allow
+              Action: ssm:GetParameters
+              Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${self:custom.stage}/algolia-app-id
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${self:custom.stage}/algolia-admin-key
+
+    getHashTag:
+        handler: functions/get-hash-tag.handler
+        iamRoleStatements:
+            - Effect: Allow
+              Action: ssm:GetParameters
+              Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${self:custom.stage}/algolia-app-id
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${self:custom.stage}/algolia-admin-key
+
 resources:
     Resources:
         UsersTable:
@@ -469,6 +527,8 @@ resources:
                             KeyType: HASH
                       Projection:
                           ProjectionType: ALL
+                StreamSpecification:
+                    StreamViewType: NEW_AND_OLD_IMAGES
                 Tags:
                     - Key: Environment
                       Value: ${self:custom.stage}

@@ -714,6 +714,92 @@ const a_user_calls_unretweet = async (user, tweetId) => {
 	return result;
 };
 
+const a_user_calls_search = async (user, mode, query, limit, nextToken) => {
+	const search = `query search($query: String!, $limit: Int!, $nextToken: String) {
+	  search(query: $query, mode: ${mode}, limit: $limit, nextToken: $nextToken) {
+		nextToken
+		results {
+		  __typename
+		  ... on MyProfile {
+			... myProfileFields
+		  }
+		  ... on OtherProfile {
+			... otherProfileFields
+		  }
+		  ... on Tweet {
+			... tweetFields
+		  }
+		  ... on Reply {
+			... replyFields
+		  }
+		}
+	  }
+	}`;
+	const variables = {
+		query,
+		limit,
+		nextToken,
+	};
+
+	const data = await GraphQL(
+		process.env.API_URL,
+		search,
+		variables,
+		user.accessToken,
+	);
+	const result = data.search;
+
+	console.log(`[${user.username}] - search for "${query}"`);
+
+	return result;
+};
+
+const a_user_calls_getHashTag = async (
+	user,
+	mode,
+	hashTag,
+	limit,
+	nextToken,
+) => {
+	const getHashTag = `query getHashTag($hashTag: String!, $limit: Int!, $nextToken: String) {
+	  getHashTag(hashTag: $hashTag, mode: ${mode}, limit: $limit, nextToken: $nextToken) {
+		nextToken
+		results {
+		  __typename
+		  ... on MyProfile {
+			... myProfileFields
+		  }
+		  ... on OtherProfile {
+			... otherProfileFields
+		  }
+		  ... on Tweet {
+			... tweetFields
+		  }
+		  ... on Reply {
+			... replyFields
+		  }
+		}
+	  }
+	}`;
+	const variables = {
+		hashTag,
+		limit,
+		nextToken,
+	};
+
+	const data = await GraphQL(
+		process.env.API_URL,
+		getHashTag,
+		variables,
+		user.accessToken,
+	);
+	const result = data.getHashTag;
+
+	console.log(`[${user.username}] - got hash tag "${hashTag}"`);
+
+	return result;
+};
+
 module.exports = {
 	a_user_signs_up,
 	we_invoke_confirmUserSignup,
@@ -739,4 +825,6 @@ module.exports = {
 	a_user_calls_unfollow,
 	a_user_calls_getFollowing,
 	a_user_calls_unretweet,
+	a_user_calls_search,
+	a_user_calls_getHashTag,
 };
