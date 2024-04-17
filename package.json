@@ -36,10 +36,16 @@
 		"@middy/core": "^1.5.2",
 		"@middy/ssm": "^1.5.2",
 		"algoliasearch": "^4.23.2",
+		"aws-appsync": "^4.1.10",
 		"aws-sdk": "^2.1586.0",
 		"chance": "^1.1.11",
+		"graphql": "^15.5.0",
+		"graphql-tag": "^2.12.6",
+		"isomorphic-fetch": "^3.0.0",
 		"lodash": "^4.17.21",
-		"ulid": "^2.3.0"
+		"redux": "^5.0.1",
+		"ulid": "^2.3.0",
+		"uuid": "^9.0.1"
 	},
 	"lint-staged": {
 		"**/*": "prettier --write --ignore-unknown"

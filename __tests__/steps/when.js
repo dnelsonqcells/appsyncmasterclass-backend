@@ -1,6 +1,6 @@
 require("dotenv").config({ path: [".env.local", ".env"] });
 const AWS = require("aws-sdk");
-const { GraphQL, registerFragment } = require("../../lib/graphql");
+const { GraphQL, registerFragment } = require("../lib/graphql");
 
 const myProfileFragment = `
 fragment myProfileFields on MyProfile {

@@ -41,6 +41,8 @@ appSync:
             awsRegion: us-east-1
             defaultAction: ALLOW
             userPoolId: !Ref CognitoUserPool
+    additionalAuthentications:
+        - type: "AWS_IAM"
     logging:
         level: ALL
     pipelineFunctions:
@@ -58,6 +60,11 @@ appSync:
             code: resolvers/hydrateFollowing.js
 
     resolvers:
+        # Subscription
+        Subscription.onNotified:
+            functions:
+                - dataSource: none
+                  code: resolvers/onNotified.js
         # Queries
         Query.getMyProfile:
             functions:
@@ -129,6 +136,10 @@ appSync:
             functions:
                 - dataSource: unfollowMutation
                   code: resolvers/unfollow.js
+        Mutation.notifyRetweeted:
+            functions:
+                - dataSource: notificationsTable
+                  code: resolvers/notifyRetweeted.js
         # Nested Fields
         Tweet.profile:
             functions:
@@ -310,6 +321,10 @@ appSync:
             type: AWS_LAMBDA
             config:
                 functionName: getHashTag
+        notificationsTable:
+            type: AMAZON_DYNAMODB
+            config:
+                tableName: !Ref NotificationsTable
 
 functions:
     confirmUserSignup:
@@ -506,6 +521,24 @@ functions:
                   - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${self:custom.stage}/algolia-app-id
                   - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${self:custom.stage}/algolia-admin-key
 
+    notify:
+        handler: functions/notify.handler
+        environment:
+            GRAPHQL_API_URL: ${appsync:url}
+            TWEETS_TABLE: !Ref TweetsTable
+            USERS_TABLE: !Ref UsersTable
+        events:
+            - stream:
+                  type: dynamodb
+                  arn: !GetAtt TweetsTable.StreamArn
+        iamRoleStatements:
+            - Effect: Allow
+              Action: appsync:GraphQL
+              Resource: !Sub ${GraphQlApi.Arn}/*
+            - Effect: Allow
+              Action: dynamodb:GetItem
+              Resource: !GetAtt TweetsTable.Arn
+
 resources:
     Resources:
         UsersTable:
@@ -687,6 +720,35 @@ resources:
                       Value: ${self:custom.stage}
                     - Key: Name
                       Value: timelines-table
+
+        NotificationsTable:
+            Type: AWS::DynamoDB::Table
+            Properties:
+                BillingMode: PAY_PER_REQUEST
+                KeySchema:
+                    - AttributeName: id
+                      KeyType: HASH
+                    - AttributeName: userId
+                      KeyType: RANGE
+                AttributeDefinitions:
+                    - AttributeName: id
+                      AttributeType: S
+                    - AttributeName: userId
+                      AttributeType: S
+                GlobalSecondaryIndexes:
+                    - IndexName: byUserId
+                      KeySchema:
+                          - AttributeName: userId
+                            KeyType: HASH
+                          - AttributeName: id
+                            KeyType: RANGE
+                      Projection:
+                          ProjectionType: ALL
+                Tags:
+                    - Key: Environment
+                      Value: ${self:custom.stage}
+                    - Key: Name
+                      Value: notifications-table
 
         CognitoUserPool:
             Type: AWS::Cognito::UserPool
