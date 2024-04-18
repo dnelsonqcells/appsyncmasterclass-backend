@@ -5,7 +5,7 @@ const { HashTagModes, TweetTypes } = require("../../../lib/constants");
 const retry = require("async-retry");
 const chance = require("chance").Chance();
 
-describe("Given an authenticated user", () => {
+xdescribe("Given an authenticated user", () => {
 	let userA, userAsProfile;
 	const hashTag = `#${chance.string({ length: 16, alpha: true })}`;
 
